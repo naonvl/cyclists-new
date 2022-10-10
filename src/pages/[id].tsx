@@ -86,7 +86,8 @@ const Page = (props) => {
   })
 
   const [uid, setUid] = useState('')
-  const [price, setPrice] = useState(51.99)
+  let price = 51.99
+  // const [price, setPrice] = useState(51.99)
   const [submitLoading, setSubmitLoading] = useState(false)
   const handleSubmit = async () => {
     setSubmitLoading(true)
@@ -1203,7 +1204,7 @@ const Page = (props) => {
           </div>
           <div className='hidden my-2 lg:block'>
             <Text className='text-lg font-bold text-center'>
-              £ 51.99 | <span className='text-sm'>save £13.00</span>{' '}
+              £ {price * order} | <span className='text-sm'>save £13.00</span>{' '}
               <span className='text-red-500'>(25% off)</span>
             </Text>
           </div>
