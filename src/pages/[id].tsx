@@ -118,14 +118,14 @@ const Page = (props) => {
     setSubmitLoading(false)
   }
 
-  const getCurrentUser = (id) => {
-    fetch('https://39e4-180-244-130-245.ap.ngrok.io/api/getuser', {
-      method: 'GET',
-      body: JSON.stringify(id),
-    }).then((data) => {
-      console.log(data)
-    })
-  }
+  // const getCurrentUser = (id) => {
+  //   fetch('https://39e4-180-244-130-245.ap.ngrok.io/api/getuser', {
+  //     method: 'GET',
+  //     body: JSON.stringify(id),
+  //   }).then((data) => {
+  //     console.log(data)
+  //   })
+  // }
 
   useEffect(() => {
     if (window.innerWidth < 800) {
