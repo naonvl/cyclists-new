@@ -622,7 +622,7 @@ const Page = (props) => {
                               <button
                                 onClick={() => {
                                   setActiveText(index + 1)
-                                  console.log(canvasRef.current.getObjects())
+                                  // console.log(canvasRef.current.getObjects())
                                   // canvasRef.current.setActiveObject(
                                   //   canvasRef.current.item(index + 1)
                                   // )
@@ -637,7 +637,7 @@ const Page = (props) => {
                                   //   canvasRef.current.item(index + 1)
                                   // )
                                   canvasRef.current.renderAll()
-                                  console.log(canvasRef.current._objects)
+                                  // console.log(canvasRef.current._objects)
                                   setAllText(
                                     allText.filter((item) => item !== data)
                                   )
@@ -722,7 +722,7 @@ const Page = (props) => {
                             name=''
                             id='color'
                             onChange={(e) => {
-                              console.log(e.target.value)
+                              // console.log(e.target.value)
                               canvasRef.current
                                 .getActiveObject()
                                 .set('fill', e.target.value)
