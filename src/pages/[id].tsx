@@ -916,6 +916,7 @@ const Page = (props) => {
           <form
             action='https://cyclists.com/cart/add'
             method='POST'
+            target="_blank"
             onSubmit={handleSubmit}
           >
             <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>

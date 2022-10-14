@@ -920,6 +920,7 @@ const Page = (props) => {
           <form
             action='https://cyclists.com/cart/add'
             method='POST'
+            target='_blank'
             onSubmit={handleSubmit}
           >
             <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
@@ -985,7 +986,8 @@ const Page = (props) => {
 
         <div className='block my-2 lg:hidden'>
           <Text className='text-lg font-bold text-center'>
-            £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
+            £ {price * formData.quantity} |{' '}
+            <span className='text-sm'>save £13.00</span>{' '}
             <span className='text-red-500'>(25% off)</span>
           </Text>
         </div>
@@ -1064,7 +1066,8 @@ const Page = (props) => {
           </div>
           <div className='hidden my-2 lg:block'>
             <Text className='text-lg font-bold text-center'>
-              £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
+              £ {price * formData.quantity} |{' '}
+              <span className='text-sm'>save £13.00</span>{' '}
               <span className='text-red-500'>(25% off)</span>
             </Text>
           </div>
