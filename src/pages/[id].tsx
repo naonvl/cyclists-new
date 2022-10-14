@@ -33,6 +33,7 @@ const LCanvas = dynamic(() => import('@/components/layout/canvas'), {
 })
 
 // dom components goes here
+let price = 51.99
 const Page = (props) => {
   const canvasRef = useRef<fabric.Canvas>()
 
@@ -980,7 +981,7 @@ const Page = (props) => {
 
         <div className='block my-2 lg:hidden'>
           <Text className='text-lg font-bold text-center'>
-            £ 51.99 | <span className='text-sm'>save £13.00</span>{' '}
+            £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
             <span className='text-red-500'>(25% off)</span>
           </Text>
         </div>
@@ -1059,7 +1060,7 @@ const Page = (props) => {
           </div>
           <div className='hidden my-2 lg:block'>
             <Text className='text-lg font-bold text-center'>
-              £ 51.99 | <span className='text-sm'>save £13.00</span>{' '}
+              £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
               <span className='text-red-500'>(25% off)</span>
             </Text>
           </div>

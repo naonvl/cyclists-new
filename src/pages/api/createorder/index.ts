@@ -7,18 +7,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    // const receipent =
-    //   process.env.NODE_ENV === 'development'
-    //     ? 'delvieronigel@gmail.com'
-    //     : 'ndl0901@gmail.com'
-
     const maillits = [
       'delvieronigel@gmail.com',
       'ndl0901@gmail.com',
       'marcus@cyclists.com',
       'marcus@ibooking.com',
     ]
-    await sendEMail('CANADA', {
+    await sendEMail({
       from: 'cyclists.developer@gmail.com',
       // to: receipent,
       to: maillits,

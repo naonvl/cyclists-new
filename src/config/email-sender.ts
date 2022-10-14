@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer'
  *
  * @param {Object} config
  */
-const sendEmail = async (provider, config) => {
+const sendEmail = async (config) => {
   if (typeof config !== 'object') {
     return new Error('config must be object!')
   }

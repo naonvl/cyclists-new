@@ -8,9 +8,9 @@ import {
 } from 'react'
 import { Camera, Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
-import Loader from '@/components/canvas/Loader'
 import useStore from '@/helpers/store'
 import { getMousePosition, getIntersects, getRealPosition } from '@/util/fabric'
+import Loader from '@/components/canvas/Loader'
 import { fabric } from 'fabric'
 
 interface CanvasProps {

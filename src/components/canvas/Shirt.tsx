@@ -4,7 +4,6 @@ import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { fabric } from 'fabric'
-import Loader from '@/components/canvas/Loader'
 import useStore from '@/helpers/store'
 import {
   useState,
