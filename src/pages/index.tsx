@@ -265,49 +265,49 @@ const Page = (props) => {
   }
 
   const handleChangeTexture = (index: number) => {
-    // setIsLoading(true)
-    // setTextureChanged(true)
-    // if (mobile) {
-    //   setTexture({
-    //     path: index + 1,
-    //     width: 1024,
-    //     height: 1024,
-    //   })
-    //   return loadSvg({
-    //     canvas: canvasRef,
-    //     textureRef,
-    //     setTextureChanged,
-    //     setIsLoading,
-    //     setSvgGroup,
-    //     setColors,
-    //     colors,
-    //     texture: {
-    //       path: index + 1,
-    //       width: 1024,
-    //       height: 1024,
-    //     },
-    //   })
-    // } else {
-    //   setTexture({
-    //     path: index + 1,
-    //     width: 2048,
-    //     height: 2048,
-    //   })
-    //   return loadSvg({
-    //     canvas: canvasRef,
-    //     textureRef,
-    //     setTextureChanged,
-    //     setIsLoading,
-    //     setSvgGroup,
-    //     setColors,
-    //     colors,
-    //     texture: {
-    //       path: index + 1,
-    //       width: 2048,
-    //       height: 2048,
-    //     },
-    //   })
-    // }
+    setIsLoading(true)
+    setTextureChanged(true)
+    if (mobile) {
+      setTexture({
+        path: index + 1,
+        width: 1024,
+        height: 1024,
+      })
+      return loadSvg({
+        canvas: canvasRef,
+        textureRef,
+        setTextureChanged,
+        setIsLoading,
+        setSvgGroup,
+        setColors,
+        colors,
+        texture: {
+          path: index + 1,
+          width: 1024,
+          height: 1024,
+        },
+      })
+    } else {
+      setTexture({
+        path: index + 1,
+        width: 2048,
+        height: 2048,
+      })
+      return loadSvg({
+        canvas: canvasRef,
+        textureRef,
+        setTextureChanged,
+        setIsLoading,
+        setSvgGroup,
+        setColors,
+        colors,
+        texture: {
+          path: index + 1,
+          width: 2048,
+          height: 2048,
+        },
+      })
+    }
   }
 
   const decrementAction = () => {
@@ -453,6 +453,7 @@ const Page = (props) => {
             </div>
             {Page?.r3f && props.width <= 768 ? (
               <LCanvas
+                onClick={() => handleClickCanvas()}
                 canvasRef={canvasRef}
                 width={width}
                 style={{
@@ -634,7 +635,7 @@ const Page = (props) => {
                     ) : (
                       <Text className='mr-auto text-xs text-gray-600'>
                         Choose the{' '}
-                        <b className='capitalize'>{data.id.replace('-', '')}</b>{' '}
+                        <b className='capitalize'>{data.id.replace('-', ' ')}</b>{' '}
                         colour
                       </Text>
                     )}
@@ -1109,6 +1110,7 @@ const Page = (props) => {
           </div>
           {Page?.r3f && props.width > 768 ? (
             <LCanvas
+              onClick={() => handleClickCanvas()}
               canvasRef={canvasRef}
               width={width}
               style={{

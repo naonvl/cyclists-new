@@ -150,21 +150,19 @@ const ShirtComponent = ({
       (e.clientX - rect.left) / rect.width,
       (e.clientY - rect.top) / rect.height,
     ]
-
     pointer.fromArray(array)
     // Get intersects
     mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
     raycaster.setFromCamera(mouse, camera)
     const intersects = raycaster.intersectObjects(scene.children)
-
-    textureRef.current = new Texture(canvasRef.current.getElement())
-    textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-    textureRef.current.flipY = false
+    // textureRef.current = new Texture(canvasRef.current.getElement())
+    // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
+    // textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
 
     if (intersects.length > 0 && intersects[0].uv) {
       let uv = intersects[0].uv
-
+      setRay(uv)
       return {
         x: Math.round(uv.x * 2048) - 4.5,
         y: Math.round(uv.y * 2048) - 5.5,
@@ -208,20 +206,20 @@ const ShirtComponent = ({
             relatedTarget: null,
           }
         )
-        var pointerFabric = fabric.util.getPointer(
-            simEvt,
-            canvasRef.current.getSelectionElement()
-          ),
+        var pointer = fabric.util.getPointer(
+          simEvt,
+          canvasRef.current.getSelectionElement()
+        ),
           upperCanvasEl = canvasRef.current.getSelectionElement(),
           bounds = upperCanvasEl.getBoundingClientRect(),
           boundsWidth = bounds.width || 0,
           boundsHeight = bounds.height || 0,
           cssScale
       } else {
-        var pointerFabric = fabric.util.getPointer(
-            e,
-            canvasRef.current.getSelectionElement()
-          ),
+        var pointer = fabric.util.getPointer(
+          e,
+          canvasRef.current.getSelectionElement()
+        ),
           upperCanvasEl = canvasRef.current.getSelectionElement(),
           bounds = upperCanvasEl.getBoundingClientRect(),
           boundsWidth = bounds.width || 0,
@@ -237,16 +235,13 @@ const ShirtComponent = ({
         }
       }
       canvasRef.current.calcOffset()
-      pointerFabric.x =
-        Math.round(pointerFabric.x) - canvasRef.current.getCenter().left
-      pointerFabric.y =
-        Math.round(pointerFabric.y) - canvasRef.current.getCenter().top
+      pointer.x = Math.round(pointer.x) - canvasRef.current.getCenter().left
+      pointer.y = Math.round(pointer.y) - canvasRef.current.getCenter().top
       /* BEGIN PATCH CODE */
       if (e.target !== canvasRef.current.getSelectionElement()) {
         var positionOnScene
-        if (isMobileVersion) {
+        if (width < 800) {
           positionOnScene = getPosition(simEvt)
-
           if (positionOnScene) {
             // console.log(simEvt.type);
             pointer.x = positionOnScene.x
@@ -264,7 +259,7 @@ const ShirtComponent = ({
       }
       /* END PATCH CODE */
       if (!ignoreZoom) {
-        pointerFabric = canvasRef.current.restorePointerVpt(pointer)
+        pointer = canvasRef.current.restorePointerVpt(pointer)
       }
 
       if (boundsWidth === 0 || boundsHeight === 0) {
@@ -286,7 +281,6 @@ const ShirtComponent = ({
     //   console.log(e)
     // })
   }
-
   const handleClick = (e) => {
     const positionOnScene = getPosition(e)
     if (positionOnScene) {
@@ -303,13 +297,25 @@ const ShirtComponent = ({
   const inputRef = React.useRef(null)
 
   useEffect(() => {
-    // initPatch()
+    initPatch()
+    // document
+    //   .getElementsByTagName('canvas')[0]
+    //   .addEventListener('mousedown', (e) => {
+    //     textureRef.current.needsUpdate = true
+    //   })
     document
       .getElementsByTagName('canvas')[0]
-      .addEventListener('mousedown', (e) => {
-        textureRef.current.needsUpdate = true
-      })
-
+      .addEventListener('mousedown', handleClick)
+    canvasRef.current.on('mouse:down', (e: any) => {
+      setActiveText(canvasRef.current.getObjects().indexOf(e.target))
+      if (e.target.text) {
+        setEditText(true)
+        controlsRef.current.enabled = false
+      } else {
+        setEditText(false)
+        controlsRef.current.enabled = true
+      }
+    })
     if (textChanged) {
       setTextChanged(false)
     }
@@ -317,19 +323,18 @@ const ShirtComponent = ({
 
   const handleTextPosition = (e) => {
     if (isAddText) {
-      setAllText((allText) => [...allText, text])
-      const jerseyText = addText({
+      addText({
         text,
         canvasRef,
         left: e.intersections[0].uv.x * dimensions.width,
         top: e.intersections[0].uv.y * dimensions.height,
       })
-      textRef.current = jerseyText
+      // textRef.current = jerseyText
       // textureRef.current = new Texture(canvasRef.current.getElement())
       // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
       // textureRef.current.flipY = false
-      textureRef.current.needsUpdate = true
-      gl.domElement.style.cursor = 'auto'
+      // textureRef.current.needsUpdate = true
+      // gl.domElement.style.cursor = 'auto'
       return setIsAddText(false)
     }
   }
@@ -340,10 +345,14 @@ const ShirtComponent = ({
       <group
         ref={groupRef}
         dispose={null}
-        onClick={(e) => handleTextPosition(e)}
+        // onClick={(e) => {
+        //   if (isAddText) {
+        //     handleTextPosition(e)
+        //   }
+        // }}
         onPointerMove={(e) => {
           if (isAddText) {
-            gl.domElement.style.cursor = 'crosshair'
+            // gl.domElement.style.cursor = 'crosshair'
           }
         }}
         onPointerOver={() => setHovered(true)}

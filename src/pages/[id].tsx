@@ -260,49 +260,49 @@ const Page = (props) => {
   }
 
   const handleChangeTexture = (index: number) => {
-    // setIsLoading(true)
-    // setTextureChanged(true)
-    // if (mobile) {
-    //   setTexture({
-    //     path: index + 1,
-    //     width: 1024,
-    //     height: 1024,
-    //   })
-    //   return loadSvg({
-    //     canvas: canvasRef,
-    //     textureRef,
-    //     setTextureChanged,
-    //     setIsLoading,
-    //     setSvgGroup,
-    //     setColors,
-    //     colors,
-    //     texture: {
-    //       path: index + 1,
-    //       width: 1024,
-    //       height: 1024,
-    //     },
-    //   })
-    // } else {
-    //   setTexture({
-    //     path: index + 1,
-    //     width: 2048,
-    //     height: 2048,
-    //   })
-    //   return loadSvg({
-    //     canvas: canvasRef,
-    //     textureRef,
-    //     setTextureChanged,
-    //     setIsLoading,
-    //     setSvgGroup,
-    //     setColors,
-    //     colors,
-    //     texture: {
-    //       path: index + 1,
-    //       width: 2048,
-    //       height: 2048,
-    //     },
-    //   })
-    // }
+    setIsLoading(true)
+    setTextureChanged(true)
+    if (mobile) {
+      setTexture({
+        path: index + 1,
+        width: 1024,
+        height: 1024,
+      })
+      return loadSvg({
+        canvas: canvasRef,
+        textureRef,
+        setTextureChanged,
+        setIsLoading,
+        setSvgGroup,
+        setColors,
+        colors,
+        texture: {
+          path: index + 1,
+          width: 1024,
+          height: 1024,
+        },
+      })
+    } else {
+      setTexture({
+        path: index + 1,
+        width: 2048,
+        height: 2048,
+      })
+      return loadSvg({
+        canvas: canvasRef,
+        textureRef,
+        setTextureChanged,
+        setIsLoading,
+        setSvgGroup,
+        setColors,
+        colors,
+        texture: {
+          path: index + 1,
+          width: 2048,
+          height: 2048,
+        },
+      })
+    }
   }
 
   const decrementAction = () => {
