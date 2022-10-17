@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import { GetServerSideProps, GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { fabric } from 'fabric'
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
 import { getProductsInCollection } from '../lib/shopify'
@@ -20,6 +20,7 @@ import addText from '@/helpers/addText'
 import ModalText from '@/components/dom/ModalText'
 import Color from '@/components/dom/Color'
 import THREE from 'three'
+import { initFabricCanvas } from '@/util/fabric'
 
 // Dynamic import is used to prevent a payload when the website start that will include threejs r3f etc..
 // WARNING ! errors might get obfuscated by using dynamic import.
@@ -36,6 +37,7 @@ const LCanvas = dynamic(() => import('@/components/layout/canvas'), {
 let price = 51.99
 const Page = (props) => {
   const canvasRef = useRef<fabric.Canvas>()
+  const textureRef = useRef<THREE.Texture>()
 
   const isAddText = useStore((state) => state.isAddText)
   const setIsAddText = useStore((state) => state.setIsAddText)
@@ -44,7 +46,6 @@ const Page = (props) => {
   const texture = useStore((state) => state.texture)
   const textureChanged = useStore((state) => state.textureChanged)
   const setTextureChanged = useStore((state) => state.setTextureChanged)
-  const setTexture = useStore((state) => state.setTexture)
   const changeRotateRight = useStore((state) => state.changeRotateRight)
   const changeRotateLeft = useStore((state) => state.changeRotateLeft)
   const setIsObjectFront = useStore((state) => state.setIsObjectFront)
@@ -57,10 +58,13 @@ const Page = (props) => {
   const setWidth = useStore((state) => state.setWidth)
   const width = useStore((state) => state.width)
   const setTextChanged = useStore((state) => state.setTextChanged)
+  const setTexture = useStore((state) => state.setTexture)
+  const setDimensions = useStore((state) => state.setDimensions)
   const setTextActive = useStore((state) => state.setTextActive)
   const colors = useStore((state) => state.colors)
   const setColors = useStore((state) => state.setColors)
   const setSvgGroup = useStore((state) => state.setSvgGroup)
+  const setIsMobileVersion = useStore((state) => state.setIsMobileVersion)
   const inputNumberRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState('')
   const cancelModalTextRef = useRef(null)
@@ -92,31 +96,84 @@ const Page = (props) => {
 
   const [uid, setUid] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
-  const handleSubmit = async () => {
-    setSubmitLoading(true)
-    let image = `data:image/svg+xml;utf8,${encodeURIComponent(
-      canvasRef.current.toSVG()
-    )}`
-    let imageTemp = document.createElement('img')
-    imageTemp.src = image
-    let s = new XMLSerializer().serializeToString(imageTemp)
-    let encodedData = window.btoa(s)
 
-    await fetch('/api/createorder', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        attachment: encodedData,
-        userId: props.userId,
-        id: formData.id,
-        quantity: formData.quantity,
-      }),
+  /**
+   * NOTE: Only running on first render
+   * Check window width and set dimension for size of fabric canvas
+   */
+  const getWindowDimensions = useCallback(() => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : undefined
+
+    if (width < 800) {
+      setDimensions({ width: 1024, height: 1024 })
+      setIsMobileVersion(true)
+      setTexture({
+        path: 1,
+        width: 1024,
+        height: 1024,
+      })
+      initFabricCanvas({
+        canvasRef,
+        width: 1024,
+        height: 1024,
+      })
+      return loadSvg({
+        canvas: canvasRef,
+        textureRef,
+        setIsLoading,
+        setSvgGroup,
+        setColors,
+        setTextureChanged,
+        colors,
+        texture: {
+          path: 1,
+          width: 1024,
+          height: 1024,
+        },
+      })
+    }
+
+    setTexture({
+      path: 1,
+      width: 2048,
+      height: 2048,
     })
+    setIsMobileVersion(false)
+    initFabricCanvas({
+      canvasRef,
+      width: 2048,
+      height: 2048,
+    })
+    return loadSvg({
+      canvas: canvasRef,
+      textureRef,
+      setIsLoading,
+      setSvgGroup,
+      setColors,
+      setTextureChanged,
+      colors,
+      texture: {
+        path: 1,
+        width: 2048,
+        height: 2048,
+      },
+    })
+  }, [
+    colors,
+    setColors,
+    setDimensions,
+    setIsLoading,
+    setIsMobileVersion,
+    setSvgGroup,
+    setTexture,
+    setTextureChanged,
+  ])
 
-    setSubmitLoading(false)
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      getWindowDimensions()
+    }
+  }, [getWindowDimensions])
 
   // const getCurrentUser = (id) => {
   //   fetch('https://39e4-180-244-130-245.ap.ngrok.io/api/getuser', {
@@ -126,53 +183,20 @@ const Page = (props) => {
   //     console.log(data)
   //   })
   // }
+  // useEffect(() => {
+  //   canvasRef.current = new fabric.Canvas('canvas', {
+  //     preserveObjectStacking: true,
+  //     imageSmoothingEnabled: true,
+  //     selection: false,
+  //     width: width,
+  //     height: width,
+  //   })
 
-  useEffect(() => {
-    if (window.innerWidth < 800) {
-      setWidth(1024)
-      setMobile(true)
-    } else {
-      setWidth(2048)
-      setMobile(false)
-    }
-
-    canvasRef.current = new fabric.Canvas('canvas', {
-      preserveObjectStacking: true,
-      imageSmoothingEnabled: true,
-      selection: false,
-      width: width,
-      height: width,
-    })
-
-    loadSvg({
-      mobile: mobile,
-      texture: texture,
-      canvas: canvasRef,
-      setSvgGroup,
-      setColors,
-      isLoading,
-      setIsLoading,
-      setTextureChanged,
-    })
-
-    // console.log(svgGroup)
-
-    // cleanup
-    return () => {
-      canvasRef.current?.dispose()
-      canvasRef.current = null
-    }
-  }, [
-    isLoading,
-    mobile,
-    setColors,
-    setIsLoading,
-    setSvgGroup,
-    setTextureChanged,
-    setWidth,
-    texture,
-    width,
-  ])
+  //   return () => {
+  //     canvasRef.current?.dispose()
+  //     canvasRef.current = null
+  //   }
+  // }, [setTexture, setWidth, width])
 
   useEffect(() => {
     switch (step) {
@@ -209,22 +233,76 @@ const Page = (props) => {
     setCameraChange(true)
   }
 
+  const handleSubmit = async () => {
+    setSubmitLoading(true)
+    let image = `data:image/svg+xml;utf8,${encodeURIComponent(
+      canvasRef.current.toSVG()
+    )}`
+    let imageTemp = document.createElement('img')
+    imageTemp.src = image
+    let s = new XMLSerializer().serializeToString(imageTemp)
+    let encodedData = window.btoa(s)
+
+    await fetch('/api/createorder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        attachment: encodedData,
+        userId: undefined,
+        id: formData.id,
+        quantity: formData.quantity,
+      }),
+    })
+
+    setSubmitLoading(false)
+  }
+
   const handleChangeTexture = (index: number) => {
-    setIsLoading(true)
-    setTextureChanged(true)
-    if (width < 800) {
-      setTexture({
-        path: index + 1,
-        width: 1024,
-        height: 1024,
-      })
-    } else {
-      setTexture({
-        path: index + 1,
-        width: 2048,
-        height: 2048,
-      })
-    }
+    // setIsLoading(true)
+    // setTextureChanged(true)
+    // if (mobile) {
+    //   setTexture({
+    //     path: index + 1,
+    //     width: 1024,
+    //     height: 1024,
+    //   })
+    //   return loadSvg({
+    //     canvas: canvasRef,
+    //     textureRef,
+    //     setTextureChanged,
+    //     setIsLoading,
+    //     setSvgGroup,
+    //     setColors,
+    //     colors,
+    //     texture: {
+    //       path: index + 1,
+    //       width: 1024,
+    //       height: 1024,
+    //     },
+    //   })
+    // } else {
+    //   setTexture({
+    //     path: index + 1,
+    //     width: 2048,
+    //     height: 2048,
+    //   })
+    //   return loadSvg({
+    //     canvas: canvasRef,
+    //     textureRef,
+    //     setTextureChanged,
+    //     setIsLoading,
+    //     setSvgGroup,
+    //     setColors,
+    //     colors,
+    //     texture: {
+    //       path: index + 1,
+    //       width: 2048,
+    //       height: 2048,
+    //     },
+    //   })
+    // }
   }
 
   const decrementAction = () => {
@@ -330,14 +408,6 @@ const Page = (props) => {
 
   return (
     <>
-      {/* <Navbar /> */}
-
-      {/* <div className='px-4 py-2 bg-[#f9f9f9] lg:px-16 lg:py-4'>
-        <Text className='text-xs'>
-          Home | Jersey Customiser. Your jersey just the way you want it.
-        </Text>
-      </div> */}
-
       <div className='flex flex-col px-4 mx-auto lg:px-16 lg:flex-row max-w-[1400px]'>
         {isAddText ? (
           <div className='fixed top-0 bottom-0 left-0 right-0 z-50 bg-black opacity-50' />
@@ -378,7 +448,6 @@ const Page = (props) => {
             </div>
             {Page?.r3f && props.width <= 768 ? (
               <LCanvas
-                onClick={handleClickCanvas}
                 canvasRef={canvasRef}
                 width={width}
                 style={{
@@ -386,7 +455,13 @@ const Page = (props) => {
                   zIndex: isAddText ? '99' : '20',
                 }}
               >
-                {Page.r3f({ canvasRef, setRay, setActiveText, setEditText })}
+                {Page.r3f({
+                  canvasRef,
+                  textureRef,
+                  setRay,
+                  setActiveText,
+                  setEditText,
+                })}
               </LCanvas>
             ) : null}
           </div>
@@ -541,17 +616,23 @@ const Page = (props) => {
               menuBackground='bg-[#e5e5e5]'
               label='stepTwo'
             >
-              <div className='grid grid-cols-3 gap-3'>
+              <div className='px-2 grid grid-cols-3 gap-3'>
                 {colors.map((data, index) => (
                   <div
                     key={index}
                     className='inline-flex flex-col items-center justify-between w-full'
                   >
-                    <Text className='mr-auto text-xs text-gray-600'>
-                      {data.id == 'base'
-                        ? `Choose the base colour`
-                        : `Choose accent colour ${data.id}`}
-                    </Text>
+                    {data.id == 'base' ? (
+                      <Text className='mr-auto text-xs text-gray-600'>
+                        Choose the <b>Base</b> colour
+                      </Text>
+                    ) : (
+                      <Text className='mr-auto text-xs text-gray-600'>
+                        Choose the{' '}
+                        <b className='capitalize'>{data.id.replace('-', '')}</b>{' '}
+                        colour
+                      </Text>
+                    )}
                     <div className='relative'>
                       <Color
                         color={data.fill}
@@ -632,7 +713,7 @@ const Page = (props) => {
                                   // canvasRef.current.remove(
                                   //   canvasRef.current.item(index + 1)
                                   // )
-                                  // canvasRef.current.renderAll()
+                                  canvasRef.current.renderAll()
                                   // console.log(canvasRef.current._objects)
                                   setAllText(
                                     allText.filter((item) => item !== data)
@@ -916,7 +997,7 @@ const Page = (props) => {
           <form
             action='https://cyclists.com/cart/add'
             method='POST'
-            target="_blank"
+            target='_blank'
             onSubmit={handleSubmit}
           >
             <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
@@ -982,7 +1063,8 @@ const Page = (props) => {
 
         <div className='block my-2 lg:hidden'>
           <Text className='text-lg font-bold text-center'>
-            £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
+            £ {price * formData.quantity} |{' '}
+            <span className='text-sm'>save £13.00</span>{' '}
             <span className='text-red-500'>(25% off)</span>
           </Text>
         </div>
@@ -1022,7 +1104,6 @@ const Page = (props) => {
           </div>
           {Page?.r3f && props.width > 768 ? (
             <LCanvas
-              onClick={handleClickCanvas}
               canvasRef={canvasRef}
               width={width}
               style={{
@@ -1031,7 +1112,13 @@ const Page = (props) => {
                 zIndex: isAddText ? '99' : '20',
               }}
             >
-              {Page.r3f({ canvasRef, setRay, setActiveText, setEditText })}
+              {Page.r3f({
+                canvasRef,
+                textureRef,
+                setRay,
+                setActiveText,
+                setEditText,
+              })}
             </LCanvas>
           ) : null}
           <div className='items-center justify-center hidden w-full my-2 ml-auto lg:flex gap-3'>
@@ -1061,7 +1148,8 @@ const Page = (props) => {
           </div>
           <div className='hidden my-2 lg:block'>
             <Text className='text-lg font-bold text-center'>
-              £ {price * formData.quantity} | <span className='text-sm'>save £13.00</span>{' '}
+              £ {price * formData.quantity} |{' '}
+              <span className='text-sm'>save £13.00</span>{' '}
               <span className='text-red-500'>(25% off)</span>
             </Text>
           </div>
@@ -1082,10 +1170,11 @@ const Page = (props) => {
 
 // canvas components goes here
 // It will receive same props as Page component (from getStaticProps, etc.)
-Page.r3f = ({ canvasRef, setRay, setActiveText, setEditText }) => (
+Page.r3f = ({ canvasRef, textureRef, setRay, setActiveText, setEditText }) => (
   <>
     <Shirt
       canvasRef={canvasRef}
+      textureRef={textureRef}
       setRay={setRay}
       setActiveText={setActiveText}
       setEditText={setEditText}
