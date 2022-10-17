@@ -3,8 +3,13 @@ import shallow from 'zustand/shallow'
 
 import type { NextRouter } from 'next/router'
 import type { MutableRefObject } from 'react'
+import { defaultDimensions } from './constants'
 
 interface State {
+  isMobileVersion: boolean
+  setIsMobileVersion: (param: boolean) => void
+  dimensions: { width: number; height: number }
+  setDimensions: (data: { width: number; height: number }) => void
   texturePath: number
   setTexturePath: (index: number) => void
   progress: boolean
@@ -36,7 +41,7 @@ interface State {
   setWidth: (param: number) => void
   svgGroup: Array<any>
   setSvgGroup: (data: any) => void
-  colors: Array<{ id: any; color: any }>
+  colors: Array<{ id: any; fill: any }>
   setColors: (data: any) => void
   colorChanged: boolean
   textureChanged: boolean
@@ -59,6 +64,14 @@ interface State {
 }
 
 const useStoreImpl = create<State>()((set) => ({
+  isMobileVersion: false,
+  setIsMobileVersion: (param) => set(() => ({ isMobileVersion: param })),
+  dimensions: {
+    width: defaultDimensions.width,
+    height: defaultDimensions.height,
+  },
+  setDimensions: ({ width, height }) =>
+    set(() => ({ dimensions: { width: width, height: height } })),
   isAddText: false,
   setIsAddText: (param) => set(() => ({ isAddText: param })),
   texture: {

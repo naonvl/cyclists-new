@@ -9,8 +9,8 @@ interface AddTextProps {
 }
 
 const addText = ({ text, canvasRef, left, top }: AddTextProps) => {
-  const jerseyText = new fabric.IText(text, {
-    fontSize: 20,
+  const jerseyText = new fabric.IText('Test', {
+    fontSize: 40,
     textAlign: 'center',
     fontWeight: 'bold',
     left: left,
@@ -25,11 +25,16 @@ const addText = ({ text, canvasRef, left, top }: AddTextProps) => {
 
   if (canvasRef.current) {
     jerseyText.setControlsVisibility({
-      'mt': false, 'mb': false, 'ml': false, 'mr': false, 'mtr': false
-    });
+      mt: false,
+      mb: false,
+      ml: false,
+      mr: false,
+      mtr: false,
+    })
     canvasRef.current.add(jerseyText)
     canvasRef.current.setActiveObject(jerseyText)
     canvasRef.current.renderAll()
+    return jerseyText
   }
 }
 

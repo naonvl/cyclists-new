@@ -1,75 +1,71 @@
 import { MutableRefObject } from 'react'
 import { fabric } from 'fabric'
 
-import addText from '@/helpers/addText'
-
+interface SVGData extends fabric.Object {
+  id: string
+}
 interface LoadSVGProps {
-  mobile: boolean
+  canvas: MutableRefObject<fabric.Canvas>
+  textureRef: MutableRefObject<THREE.Texture>
+  setTextureChanged: (param: boolean) => void
+  setIsLoading: (param: boolean) => void
+  setSvgGroup: (data: any) => void
+  setColors: (data: any) => void
+  colors: Array<{ id: any; fill: any }>
   texture: {
     path: number
     width: number
     height: number
   }
-  canvas: MutableRefObject<fabric.Canvas | null>
-  setIsLoading?: (param: boolean) => void
-  setSvgGroup?: (data: any) => void
-  setColors?: (any) => void
-  setTextureChanged?: (param: boolean) => void
-  isLoading: boolean
 }
 
 const loadSvg = ({
-  mobile,
-  texture,
   canvas,
+  textureRef,
   setIsLoading,
   setSvgGroup,
   setColors,
   setTextureChanged,
+  colors,
+  texture,
 }: LoadSVGProps) => {
-  let width = null
-  if (mobile) {
-    width = 1024
-  } else {
-    width = 2048
-  }
-  let colors: Array<{ id: any; fill: any }> = []
-  let path = ``
-  if (mobile) {
-    path = `/textures/Jersey_COLOR${texture.path}-mobile.svg`
-  } else {
-    path = `/textures/Jersey_COLOR${texture.path}.svg`
-  }
-  return fabric.loadSVGFromURL(path, (objects) => {
+  const path: string =
+    window.innerWidth < 800
+      ? `/textures/Jersey_COLOR${texture.path}-mobile.svg`
+      : `/textures/Jersey_COLOR${texture.path}.svg`
+
+  return fabric.loadSVGFromURL(path, (objects: SVGData[]) => {
     const svgData = fabric.util.groupSVGElements(objects, {
       width: texture.width,
       height: texture.height,
       selectable: false,
       crossOrigin: 'anonymous',
-    }) as any
+    })
 
     svgData.top = 0
     svgData.left = 0
     setSvgGroup(svgData)
 
-    for (let i = 0; i < svgData._objects.length; i++) {
-      colors[i] = {
-        id: svgData._objects[i].id,
-        fill: svgData._objects[i].fill,
-      }
-    }
+    if (colors.length == 0) {
+      let currentColors: Array<{ id: any; fill: any }> = []
 
-    setColors(colors)
+      for (let i = 0; i < objects.length; i++) {
+        currentColors.push({
+          id: objects[i].id,
+          fill: objects[i].fill,
+        })
+      }
+      setColors(currentColors)
+    }
 
     if (canvas.current && canvas.current._objects[0] == undefined) {
       canvas.current.remove(canvas.current._objects[0])
     }
 
-    if (canvas.current && svgData._objects.length > 0) {
+    if (canvas.current && objects && objects.length > 0) {
       canvas.current.add(svgData)
       canvas.current.sendToBack(svgData)
       canvas.current.renderAll()
-      // addText({ text: 'Nigel', canvasRef: canvas })
       setIsLoading(false)
       setTextureChanged(false)
     }

@@ -1,19 +1,31 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, MutableRefObject } from 'react'
+import useStore from '@/helpers/store'
 
-interface Size {
-  width: number | undefined
-  height: number | undefined
-}
-
-const useWindowDimensions = (): Size => {
+const useWindowDimensions = (): boolean => {
   const hasWindow = typeof window !== 'undefined'
+  const setDimensions = useStore((state) => state.setDimensions)
+  const setTexture = useStore((state) => state.setTexture)
 
   const getWindowDimensions = useCallback(() => {
     const width = hasWindow ? window.innerWidth : undefined
-    const height = hasWindow ? window.innerHeight : undefined
 
-    return { width, height }
-  }, [hasWindow])
+    if (width < 800) {
+      setDimensions({ width: 1024, height: 1024 })
+      setTexture({
+        path: 1,
+        width: 1024,
+        height: 1024,
+      })
+      return true
+    }
+
+    setTexture({
+      path: 1,
+      width: 2048,
+      height: 2048,
+    })
+    return false
+  }, [hasWindow, setDimensions, setTexture])
 
   const [windowDimensions, setWindowDimensions] = useState(
     getWindowDimensions()
@@ -21,12 +33,7 @@ const useWindowDimensions = (): Size => {
 
   useEffect(() => {
     if (hasWindow) {
-      const handleResize = () => {
-        setWindowDimensions(getWindowDimensions())
-      }
-      window.addEventListener('resize', handleResize)
-
-      return () => window.removeEventListener('resize', handleResize)
+      setWindowDimensions(getWindowDimensions())
     }
   }, [getWindowDimensions, hasWindow])
 

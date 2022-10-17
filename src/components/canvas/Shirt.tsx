@@ -1,5 +1,8 @@
 /* eslint-disable no-var */
-import * as THREE from 'three'
+import type { Mesh } from 'three/src/objects/Mesh'
+import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
+import { Texture } from 'three/src/textures/Texture'
+import type { ThreeEvent, Vector3 } from '@react-three/fiber'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
@@ -24,26 +27,22 @@ import {
   AdaptiveEvents,
 } from '@react-three/drei'
 import React from 'react'
-import {
-  getPositionOnScene,
-  getPositionOnSceneTouch,
-  deleteObject,
-  renderIcon,
-} from '@/util/fabric'
+import addText from '@/helpers/addText'
+import { getPositionOnScene } from '@/util/fabric'
 
 type GLTFResult = GLTF & {
   nodes: {
-    M740158_mesh_band: THREE.Mesh
-    M740158_mesh_in: THREE.Mesh
-    M740158_mesh_out: THREE.Mesh
-    M740158_mesh_zipp: THREE.Mesh
-    M740158_mesh_zipper: THREE.Mesh
+    M740158_mesh_band: Mesh
+    M740158_mesh_in: Mesh
+    M740158_mesh_out: Mesh
+    M740158_mesh_zipp: Mesh
+    M740158_mesh_zipper: Mesh
   }
   materials: {
-    ['Material.008']: THREE.MeshStandardMaterial
-    ['Material.009']: THREE.MeshStandardMaterial
-    ['Material.010']: THREE.MeshStandardMaterial
-    ['Material.011']: THREE.MeshStandardMaterial
+    ['Material.008']: MeshStandardMaterial
+    ['Material.009']: MeshStandardMaterial
+    ['Material.010']: MeshStandardMaterial
+    ['Material.011']: MeshStandardMaterial
   }
 }
 
@@ -53,11 +52,13 @@ interface ShirtProps {
   setRay: any
   setActiveText: any
   setEditText: any
+  textureRef: MutableRefObject<THREE.Texture>
 }
 
 const ShirtComponent = ({
   props,
   canvasRef,
+  textureRef,
   setRay,
   setActiveText,
   setEditText,
@@ -65,10 +66,12 @@ const ShirtComponent = ({
   const { nodes, materials } = useGLTF(
     '/model/n-cycling-jersey.drc.glb'
   ) as unknown as GLTFResult
-  const { camera, gl, raycaster, pointer } = useThree()
+  const { camera, gl, pointer, mouse, raycaster } = useThree()
   const groupRef = useRef<THREE.Group>(null)
   const controlsRef = useRef<OrbitControlsImpl>(null)
-  const textureRef = useRef<THREE.CanvasTexture>()
+  const canvasRenderedRef = useRef<HTMLCanvasElement>()
+  const textRef = useRef<fabric.IText>()
+  // const textureRef = useRef<THREE.CanvasTexture>()
   const texture = useStore((state) => state.texture)
   // Loading state
   const isLoading = useStore((state) => state.isLoading)
@@ -98,15 +101,23 @@ const ShirtComponent = ({
   const setIsLoading = useStore((state) => state.setIsLoading)
   const setIsAddText = useStore((state) => state.setIsAddText)
   const setTextureChanged = useStore((state) => state.setTextureChanged)
+  const setSvgGroup = useStore((state) => state.setSvgGroup)
+  const setColors = useStore((state) => state.setColors)
+  const colors = useStore((state) => state.colors)
+  const dimensions = useStore((state) => state.dimensions)
+  const isMobileVersion = useStore((state) => state.isMobileVersion)
   // var raycaster = new THREE.Raycaster()
   // var mouse = new THREE.Vector2()
+  const [localIntersections, setLocalIntersections] = useState<Vector3>()
+  const [localDistance, setLocalDistance] = useState(90)
   const [event, setEvent] = useState<'touchstart' | 'mousedown'>('touchstart')
   const [getUv, setGetUv] = useState() as any
+  const [allText, setAllText] = useState([])
+  const [text, setText] = useState('')
 
-  const inputRef = React.useRef(null)
-  let raycastContainer =
+  // const inputRef = React.useRef(null)
+  var raycastContainer =
     document.getElementById('rendered').children[0].childNodes[0]
-  let onClickPosition = new THREE.Vector2()
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
   const [aoMapout] = useLoader(TextureLoader, ['/textures/ao_out.png'])
@@ -115,199 +126,6 @@ const ShirtComponent = ({
 
   const [hovered, setHovered] = useState(false)
   const [clicked, setClicked] = useState(false)
-  let isMobile = false
-
-  const setFrameLoop = () => {
-    textureRef.current = new THREE.CanvasTexture(canvasRef.current.getElement())
-    textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-    textureRef.current.flipY = false
-    textureRef.current.needsUpdate = true
-    canvasRef.current.renderAll()
-  }
-
-  // const initPatch = useCallback(() => {
-  //   fabric.Object.prototype.transparentCorners = false
-  //   fabric.Object.prototype.cornerColor = 'blue'
-  //   fabric.Object.prototype.cornerStyle = 'circle'
-  //   if (width < 800) {
-  //     fabric.Object.prototype.cornerSize = 20
-  //   } else {
-  //     fabric.Object.prototype.cornerSize = 18
-  //   }
-
-  //   fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
-  //     //  if (canvasRef.current._absolutePointer && !ignoreZoom) {
-  //     //    return canvasRef.current._absolutePointer
-  //     //  }
-  //     //  if (canvasRef.current._pointer && ignoreZoom) {
-  //     //    return canvasRef.current._pointer
-  //     //  }
-  //     let simEvt = null
-  //     let pointer = null
-  //     let upperCanvasEl = null
-  //     let bounds = null
-  //     let boundsWidth = null
-  //     let boundsHeight = null
-  //     let cssScale = null
-
-  //     if (e.touches != undefined) {
-  //       simEvt = new MouseEvent(
-  //         {
-  //           touchstart: 'mousedown',
-  //           touchmove: 'mousemove',
-  //           touchend: 'mouseup',
-  //         }[e.type],
-  //         {
-  //           bubbles: true,
-  //           cancelable: true,
-  //           view: window,
-  //           detail: 1,
-  //           screenX: Math.round(e.changedTouches[0].screenX),
-  //           screenY: Math.round(e.changedTouches[0].screenY),
-  //           clientX: Math.round(e.changedTouches[0].clientX),
-  //           clientY: Math.round(e.changedTouches[0].clientY),
-  //           ctrlKey: false,
-  //           altKey: false,
-  //           shiftKey: false,
-  //           metaKey: false,
-  //           button: 0,
-  //           relatedTarget: null,
-  //         }
-  //       )
-  //       pointer = fabric.util.getPointer(
-  //         simEvt,
-  //         canvasRef.current.getSelectionElement()
-  //       )
-  //       upperCanvasEl = canvasRef.current.getSelectionElement()
-  //       bounds = upperCanvasEl.getBoundingClientRect()
-  //       boundsWidth = bounds.width || 0
-  //       boundsHeight = bounds.height || 0
-  //       cssScale
-  //     } else {
-  //       pointer = fabric.util.getPointer(
-  //         e,
-  //         canvasRef.current.getSelectionElement()
-  //       )
-  //       upperCanvasEl = canvasRef.current.getSelectionElement()
-  //       bounds = upperCanvasEl.getBoundingClientRect()
-  //       boundsWidth = bounds.width || 0
-  //       boundsHeight = bounds.height || 0
-  //       cssScale
-  //     }
-
-  //     if (!boundsWidth || !boundsHeight) {
-  //       if ('top' in bounds && 'bottom' in bounds) {
-  //         boundsHeight = Math.abs(bounds.top - bounds.bottom)
-  //       }
-  //       if ('right' in bounds && 'left' in bounds) {
-  //         boundsWidth = Math.abs(bounds.right - bounds.left)
-  //       }
-  //     }
-  //     canvasRef.current.calcOffset()
-  //     pointer.x = Math.round(pointer.x) - canvasRef.current.getCenter().left
-  //     pointer.y = Math.round(pointer.y) - canvasRef.current.getCenter().top
-  //     /* BEGIN PATCH CODE */
-  //     if (e.target !== upperCanvasEl) {
-  //       var positionOnScene
-  //       if (width < 800) {
-  //         positionOnScene = getPositionOnScene(
-  //           width,
-  //           onClickPosition,
-  //           scene,
-  //           pointer,
-  //           raycaster,
-  //           camera,
-  //           setRay,
-  //           raycastContainer,
-  //           simEvt
-  //         )
-  //         if (positionOnScene) {
-  //           // console.log(simEvt.type);
-  //           pointer.x = positionOnScene.x
-  //           pointer.y = positionOnScene.y
-  //         }
-  //       } else {
-  //         positionOnScene = getPositionOnScene(
-  //           width,
-  //           onClickPosition,
-  //           scene,
-  //           pointer,
-  //           raycaster,
-  //           camera,
-  //           setRay,
-  //           raycastContainer,
-  //           e
-  //         )
-
-  //         if (positionOnScene) {
-  //           // console.log(e.type);
-  //           pointer.x = positionOnScene.x
-  //           pointer.y = positionOnScene.y
-  //         }
-  //       }
-  //     }
-  //     /* END PATCH CODE */
-  //     if (!ignoreZoom) {
-  //       pointer = canvasRef.current.restorePointerVpt(pointer)
-  //     }
-
-  //     if (boundsWidth === 0 || boundsHeight === 0) {
-  //       cssScale = { width: 1, height: 1 }
-  //     } else {
-  //       cssScale = {
-  //         width: upperCanvasEl.width / boundsWidth,
-  //         height: upperCanvasEl.height / boundsHeight,
-  //       }
-  //     }
-
-  //     return {
-  //       x: pointer.x * cssScale.width,
-  //       y: pointer.y * cssScale.height,
-  //     }
-  //   }
-  // }, [
-  //   camera,
-  //   canvasRef,
-  //   onClickPosition,
-  //   raycastContainer,
-  //   raycaster,
-  //   scene,
-  //   setRay,
-  //   width,
-  // ])
-
-  // useEffect(() => {
-  //   // addDeleteControl()
-  //   initPatch()
-  //   let event
-  //   if (width < 800) {
-  //     event = 'touchstart'
-  //   } else {
-  //     event = 'mousedown'
-  //   }
-  //   raycastContainer.addEventListener('mousedown', handleClick)
-  //   canvasRef.current.on('object:rotating', function (options) {
-  //     options.target.snapAngle = 15
-  //   })
-  //   canvasRef.current.on('mouse:down', (e, index) => {
-  //     setActiveText(canvasRef.current.getObjects().indexOf(e.target))
-  //     if (e.target.text) {
-  //       setEditText(true)
-  //       controlsRef.current.enabled = false
-  //     } else {
-  //       setEditText(false)
-  //       controlsRef.current.enabled = true
-  //     }
-  //   })
-  // }, [
-  //   canvasRef,
-  //   handleClick,
-  //   initPatch,
-  //   raycastContainer,
-  //   setActiveText,
-  //   setEditText,
-  //   width,
-  // ])
 
   useEffect(() => {
     if (width < 800) {
@@ -316,170 +134,205 @@ const ShirtComponent = ({
       setEvent('mousedown')
     }
 
-    if (canvasRef) {
-      textureRef.current = new THREE.CanvasTexture(
-        canvasRef.current.getElement()
-      )
+    if (canvasRef.current) {
+      console.log(`Re-render canvasRef`)
+      canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
+      textureRef.current = new Texture(canvasRef.current.getElement())
       textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
       textureRef.current.flipY = false
       textureRef.current.needsUpdate = true
-      canvasRef.current.renderAll()
     }
-  }, [
-    canvasRef,
-    gl.capabilities,
-    setIsLoading,
-    setTextureChanged,
-    textureChanged,
-    width,
-  ])
+  }, [canvasRef, gl.capabilities, textureRef, width])
+
+  const getPosition = (e) => {
+    const rect = canvasRenderedRef.current.getBoundingClientRect()
+    const array = [
+      (e.clientX - rect.left) / rect.width,
+      (e.clientY - rect.top) / rect.height,
+    ]
+
+    pointer.fromArray(array)
+    // Get intersects
+    mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObjects(scene.children)
+
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+
+    if (intersects.length > 0 && intersects[0].uv) {
+      let uv = intersects[0].uv
+
+      return {
+        x: Math.round(uv.x * 2048) - 4.5,
+        y: Math.round(uv.y * 2048) - 5.5,
+      }
+    }
+    return null
+  }
+
+  const initPatch = () => {
+    fabric.Object.prototype.transparentCorners = false
+    fabric.Object.prototype.cornerColor = 'blue'
+    fabric.Object.prototype.cornerStyle = 'circle'
+    if (width < 800) {
+      fabric.Object.prototype.cornerSize = 20
+    } else {
+      fabric.Object.prototype.cornerSize = 18
+    }
+    fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
+      var simEvt
+      if (e.touches != undefined) {
+        simEvt = new MouseEvent(
+          {
+            touchstart: 'mousedown',
+            touchmove: 'mousemove',
+            touchend: 'mouseup',
+          }[e.type],
+          {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            detail: 1,
+            screenX: Math.round(e.changedTouches[0].screenX),
+            screenY: Math.round(e.changedTouches[0].screenY),
+            clientX: Math.round(e.changedTouches[0].clientX),
+            clientY: Math.round(e.changedTouches[0].clientY),
+            ctrlKey: false,
+            altKey: false,
+            shiftKey: false,
+            metaKey: false,
+            button: 0,
+            relatedTarget: null,
+          }
+        )
+        var pointerFabric = fabric.util.getPointer(
+            simEvt,
+            canvasRef.current.getSelectionElement()
+          ),
+          upperCanvasEl = canvasRef.current.getSelectionElement(),
+          bounds = upperCanvasEl.getBoundingClientRect(),
+          boundsWidth = bounds.width || 0,
+          boundsHeight = bounds.height || 0,
+          cssScale
+      } else {
+        var pointerFabric = fabric.util.getPointer(
+            e,
+            canvasRef.current.getSelectionElement()
+          ),
+          upperCanvasEl = canvasRef.current.getSelectionElement(),
+          bounds = upperCanvasEl.getBoundingClientRect(),
+          boundsWidth = bounds.width || 0,
+          boundsHeight = bounds.height || 0,
+          cssScale
+      }
+      if (!boundsWidth || !boundsHeight) {
+        if ('top' in bounds && 'bottom' in bounds) {
+          boundsHeight = Math.abs(bounds.top - bounds.bottom)
+        }
+        if ('right' in bounds && 'left' in bounds) {
+          boundsWidth = Math.abs(bounds.right - bounds.left)
+        }
+      }
+      canvasRef.current.calcOffset()
+      pointerFabric.x =
+        Math.round(pointerFabric.x) - canvasRef.current.getCenter().left
+      pointerFabric.y =
+        Math.round(pointerFabric.y) - canvasRef.current.getCenter().top
+      /* BEGIN PATCH CODE */
+      if (e.target !== canvasRef.current.getSelectionElement()) {
+        var positionOnScene
+        if (isMobileVersion) {
+          positionOnScene = getPosition(simEvt)
+
+          if (positionOnScene) {
+            // console.log(simEvt.type);
+            pointer.x = positionOnScene.x
+            pointer.y = positionOnScene.y
+          }
+        } else {
+          positionOnScene = getPosition(e)
+
+          if (positionOnScene) {
+            // console.log(e.type);
+            pointer.x = positionOnScene.x
+            pointer.y = positionOnScene.y
+          }
+        }
+      }
+      /* END PATCH CODE */
+      if (!ignoreZoom) {
+        pointerFabric = canvasRef.current.restorePointerVpt(pointer)
+      }
+
+      if (boundsWidth === 0 || boundsHeight === 0) {
+        cssScale = { width: 1, height: 1 }
+      } else {
+        cssScale = {
+          width: upperCanvasEl.width / boundsWidth,
+          height: upperCanvasEl.height / boundsHeight,
+        }
+      }
+
+      return {
+        x: pointer.x * cssScale.width,
+        y: pointer.y * cssScale.height,
+      }
+    }
+
+    // canvasRef.current.on('mouse:down', (e) => {
+    //   console.log(e)
+    // })
+  }
+
+  const handleClick = (e) => {
+    const positionOnScene = getPosition(e)
+    if (positionOnScene) {
+      const canvasRect = canvasRef.current.getCenter()
+      const simEvt = new MouseEvent(e.type, {
+        clientX: canvasRect.left + positionOnScene.x,
+        clientY: canvasRect.top + positionOnScene.y,
+      })
+
+      canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+    }
+  }
+
+  const inputRef = React.useRef(null)
 
   useEffect(() => {
-    if (textureChanged) {
-      setFrameLoop()
-    }
+    // initPatch()
+    document
+      .getElementsByTagName('canvas')[0]
+      .addEventListener('mousedown', (e) => {
+        textureRef.current.needsUpdate = true
+      })
 
     if (textChanged) {
-      setFrameLoop()
       setTextChanged(false)
     }
   })
 
-  // Subscribe canvasRef.current component to the render-loop, rotate the mesh every frame
-  useFrame((state, delta) => {
-    controlsRef.current.update()
-    setZoom(Math.floor(state.camera.position.z))
-
-    if (colorChanged) {
-      setFrameLoop()
-      state.camera.position.z = state.camera.position.z + 0.001
-
-      setColorChanged(false)
+  const handleTextPosition = (e) => {
+    if (isAddText) {
+      setAllText((allText) => [...allText, text])
+      const jerseyText = addText({
+        text,
+        canvasRef,
+        left: e.intersections[0].uv.x * dimensions.width,
+        top: e.intersections[0].uv.y * dimensions.height,
+      })
+      textRef.current = jerseyText
+      // textureRef.current = new Texture(canvasRef.current.getElement())
+      // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
+      // textureRef.current.flipY = false
+      textureRef.current.needsUpdate = true
+      gl.domElement.style.cursor = 'auto'
+      return setIsAddText(false)
     }
-    if (textChanged) {
-      state.camera.position.z = state.camera.position.z + 0.001
-    }
-
-    if (!isObjectFront && cameraChanged) {
-      state.camera.position.z = -90
-      setCameraChange(false)
-    }
-
-    if (isObjectFront && cameraChanged) {
-      state.camera.position.z = 90
-      setCameraChange(false)
-    }
-
-    if (controlsRef.current && zoomOut) {
-      state.camera.position.x *= 1.1
-      state.camera.position.y *= 1.1
-      state.camera.position.z *= 1.1
-      changeZoomOut(false)
-    }
-
-    if (controlsRef.current && zoomIn) {
-      state.camera.position.x *= 0.9
-      state.camera.position.y *= 0.9
-      state.camera.position.z *= 0.9
-      changeZoomIn(false)
-    }
-
-    if (controlsRef.current && rotateRight) {
-      groupRef.current.rotation.y += -Math.PI / 4
-      changeRotateRight(false)
-    }
-
-    if (controlsRef.current && rotateLeft) {
-      groupRef.current.rotation.y += Math.PI / 4
-      changeRotateLeft(false)
-    }
-
-    if (canvasRef.current && isAddText) {
-      state.gl.domElement.style.cursor = 'crosshair'
-      canvasRef.current.on('mouse:over', (opt) => {})
-      setIsAddText(false)
-    }
-
-    // if (!isAddText) {
-    //   state.gl.domElement.style.cursor = hovered ? 'grab' : 'auto'
-    //   state.gl.domElement.style.cursor = clicked ? 'grabbing' : 'grab'
-    // }
-  })
-
-  // const handleClick = useCallback(
-  //   (e) => {
-  //     const positionOnScene = getPositionOnScene(
-  //       width,
-  //       onClickPosition,
-  //       scene,
-  //       pointer,
-  //       raycaster,
-  //       camera,
-  //       setRay,
-  //       raycastContainer,
-  //       e
-  //     )
-  //     if (positionOnScene) {
-  //       const canvasRect = canvasRef.current.getCenter()
-  //       const simEvt = new MouseEvent(e.type, {
-  //         clientX: canvasRect.left + positionOnScene.x,
-  //         clientY: canvasRect.top + positionOnScene.y,
-  //       })
-  //       canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-  //     }
-  //   },
-  //   [
-  //     camera,
-  //     canvasRef,
-  //     onClickPosition,
-  //     pointer,
-  //     raycastContainer,
-  //     raycaster,
-  //     scene,
-  //     setRay,
-  //     width,
-  //   ]
-  // )
-
-  // const onTouch = (evt) => {
-  //   evt.preventDefault()
-  //   const positionOnScene = getPositionOnSceneTouch(
-  //     setRay,
-  //     raycastContainer,
-  //     evt
-  //     width,
-  //     onClickPosition,
-  //     scene,
-  //     pointer,
-  //     raycaster,
-  //     camera,
-  //   )
-  //   if (positionOnScene) {
-  //     const canvasRect = canvasRef.current.getCenter()
-  //     const simEvt = new MouseEvent(evt.type, {
-  //       clientX: canvasRect.left + positionOnScene.x,
-  //       clientY: canvasRect.top + positionOnScene.y,
-  //     })
-  //     canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-  //   }
-  // }
-
-  // const addDeleteControl = () => {
-  //   fabric.Object.prototype.controls.deleteControl = new fabric.Control({
-  //     x: 0.5,
-  //     y: 0.5,
-  //     offsetY: 0,
-  //     cursorStyle: 'pointer',
-  //     mouseUpHandler: (eventData, transferFormData, x, y) => {
-  //         let target = transferFormData.target
-  //         let canvas = target.canvas
-  //         canvas.remove(target)
-  //         canvas.requestRenderAll()
-  //     },
-  //     render: renderIcon,
-  //     cornerSize: 24,
-  //   })
-  // }
+  }
 
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
@@ -487,6 +340,12 @@ const ShirtComponent = ({
       <group
         ref={groupRef}
         dispose={null}
+        onClick={(e) => handleTextPosition(e)}
+        onPointerMove={(e) => {
+          if (isAddText) {
+            gl.domElement.style.cursor = 'crosshair'
+          }
+        }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onPointerDown={() => setClicked(true)}
@@ -506,11 +365,7 @@ const ShirtComponent = ({
             aoMap={aoMapzipp}
             aoMapIntensity={0.7}
           >
-            <canvasTexture
-              ref={textureRef}
-              attach='map'
-              image={canvasRef.current}
-            />
+            <texture attach='map' image={canvasRef.current.getElement()} />
           </meshStandardMaterial>
         </mesh>
         <mesh
@@ -526,15 +381,12 @@ const ShirtComponent = ({
             aoMap={aoMapzipp}
             aoMapIntensity={0.7}
           >
-            <canvasTexture
-              ref={textureRef}
-              attach='map'
-              image={canvasRef.current}
-            />
+            <texture attach='map' image={canvasRef.current.getElement()} />
           </meshStandardMaterial>
         </mesh>
         <mesh
           ref={inputRef}
+          // onWheel={(e) => setLocalIntersections(e.intersections[0].point)}
           geometry={nodes.M740158_mesh_out.geometry}
           material={materials['Material.010']}
           scale={100}
@@ -549,11 +401,7 @@ const ShirtComponent = ({
             aoMap={aoMapout}
             aoMapIntensity={0.5}
           >
-            <canvasTexture
-              ref={textureRef}
-              attach='map'
-              image={canvasRef.current}
-            />
+            <texture attach='map' image={canvasRef.current.getElement()} />
           </meshStandardMaterial>
         </mesh>
         <mesh
@@ -571,8 +419,6 @@ const ShirtComponent = ({
           />
         </mesh>
       </group>
-      <BakeShadows />
-
       <OrbitControls
         ref={controlsRef}
         args={[camera, gl.domElement]}
@@ -586,13 +432,12 @@ const ShirtComponent = ({
         enablePan={false}
         enableDamping={false}
       />
+      <BakeShadows />
       <AdaptiveDpr pixelated />
       <AdaptiveEvents />
       {/* <Stats showPanel={0} /> */}
     </>
   )
 }
-
-useGLTF.preload('/model/n-cycling-jersey.drc.glb')
 
 export default ShirtComponent

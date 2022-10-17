@@ -1436,14 +1436,11 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
 
-<<<<<<< HEAD
 "@types/fabric@^4.5.12":
   version "4.5.12"
   resolved "https://registry.yarnpkg.com/@types/fabric/-/fabric-4.5.12.tgz#9c340075e166710c9da5e92afa157e5e171d9b12"
   integrity sha512-rhRMpy+LMrRyxsDEjD78N48Qo+v7t1GEQvaEz8sm5efNsV+p4CHQCnN2wvgIyqPAIkiAGPPwSfVIBgluQP89Aw==
 
-=======
->>>>>>> 5ad91318628e582b11032d916cd040ebadb06f5f
 "@types/glob@^7.1.1":
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/@types/glob/-/glob-7.2.0.tgz#bc1b5bf3aa92f25bd5dd39f35c57361bdce5b2eb"
