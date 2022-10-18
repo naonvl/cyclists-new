@@ -16,15 +16,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             'marcus@cyclists.com',
             'marcus@ibooking.com',
           ]
-    const subject =
-      process.env.NODE_ENV == 'development'
-        ? `[DEVELOPMENT] Custom Jersey ID: ${req.body.userId}`
-        : `Custom Jersey ID: ${req.body.userId}`
     await sendEMail({
       from: 'cyclists.developer@gmail.com',
       // to: receipent,
       to: maillits,
-      subject: subject,
+      subject: `Custom Jersey ID: ${req.body.userId}`,
       html: `<p><b>UserID</b>: ${req.body.userId}</p>
       <p><b>Variant ID</b>: ${req.body.id}</p>
       <p><b>Quantity</b>: ${req.body.quantity}</p>
