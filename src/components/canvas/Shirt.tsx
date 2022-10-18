@@ -33,17 +33,16 @@ import loadSvg from '@/helpers/loadSvg'
 
 type GLTFResult = GLTF & {
   nodes: {
-    M740158_mesh_band: Mesh
-    M740158_mesh_in: Mesh
-    M740158_mesh_out: Mesh
-    M740158_mesh_zipp: Mesh
-    M740158_mesh_zipper: Mesh
+    M740158_mesh_in: THREE.Mesh
+    M740158_mesh_out: THREE.Mesh
+    M740158_mesh_zipp: THREE.Mesh
+    M740158_mesh_zipper: THREE.Mesh
   }
   materials: {
-    ['Material.008']: MeshStandardMaterial
-    ['Material.009']: MeshStandardMaterial
-    ['Material.010']: MeshStandardMaterial
-    ['Material.011']: MeshStandardMaterial
+    ['Material.016']: THREE.MeshStandardMaterial
+    ['Material.015']: THREE.MeshStandardMaterial
+    ['Material.013']: THREE.MeshStandardMaterial
+    ['Material.014']: THREE.MeshStandardMaterial
   }
 }
 
@@ -449,42 +448,23 @@ const ShirtComponent = ({
         {...props}
       >
         <mesh
-          geometry={nodes.M740158_mesh_zipp.geometry}
-          material={materials['Material.008']}
+          geometry={nodes.M740158_mesh_in.geometry}
+          material={materials['Material.016']}
           scale={100}
         >
           <meshStandardMaterial
             attach='material'
-            normalMap={normalMap}
-            normalMap-flipY={false}
-            map={textureRef.current}
-            aoMap={aoMapzipp}
-            aoMapIntensity={0.7}
-          >
-            <texture attach='map' image={canvasRef.current.getElement()} />
-          </meshStandardMaterial>
-        </mesh>
-        <mesh
-          geometry={nodes.M740158_mesh_zipper.geometry}
-          material={materials['Material.009']}
-          scale={100}
-        >
-          <meshStandardMaterial
-            attach='material'
-            normalMap={normalMap}
-            normalMap-flipY={false}
-            map={textureRef.current}
-            aoMap={aoMapzipp}
-            aoMapIntensity={0.7}
-          >
-            <texture attach='map' image={canvasRef.current.getElement()} />
-          </meshStandardMaterial>
+            roughness={1}
+            emissive={1}
+            bumpMap={bump}
+            bumpScale={0.03}
+            color='#ccc'
+          />
         </mesh>
         <mesh
           ref={inputRef}
-          // onWheel={(e) => setLocalIntersections(e.intersections[0].point)}
           geometry={nodes.M740158_mesh_out.geometry}
-          material={materials['Material.010']}
+          material={materials['Material.015']}
           scale={100}
         >
           <meshStandardMaterial
@@ -501,18 +481,36 @@ const ShirtComponent = ({
           </meshStandardMaterial>
         </mesh>
         <mesh
-          geometry={nodes.M740158_mesh_in.geometry}
-          material={materials['Material.011']}
+          geometry={nodes.M740158_mesh_zipp.geometry}
+          material={materials['Material.013']}
           scale={100}
         >
           <meshStandardMaterial
             attach='material'
-            roughness={1}
-            emissive={1}
-            bumpMap={bump}
-            bumpScale={0.03}
-            color='#ccc'
-          />
+            normalMap={normalMap}
+            normalMap-flipY={false}
+            map={textureRef.current}
+            aoMap={aoMapzipp}
+            aoMapIntensity={0.7}
+          >
+            <texture attach='map' image={canvasRef.current.getElement()} />
+          </meshStandardMaterial>
+        </mesh>
+        <mesh
+          geometry={nodes.M740158_mesh_zipper.geometry}
+          material={materials['Material.014']}
+          scale={100}
+        >
+          <meshStandardMaterial
+            attach='material'
+            normalMap={normalMap}
+            normalMap-flipY={false}
+            map={textureRef.current}
+            aoMap={aoMapzipp}
+            aoMapIntensity={0.7}
+          >
+            <texture attach='map' image={canvasRef.current.getElement()} />
+          </meshStandardMaterial>
         </mesh>
       </group>
       <OrbitControls
