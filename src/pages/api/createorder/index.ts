@@ -7,12 +7,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    const maillits = [
-      'delvieronigel@gmail.com',
-      'ndl0901@gmail.com',
-      'marcus@cyclists.com',
-      'marcus@ibooking.com',
-    ]
+    const maillits =
+      process.env.NODE_ENV == 'development'
+        ? 'delvieronigel@gmail.com'
+        : [
+            'delvieronigel@gmail.com',
+            'ndl0901@gmail.com',
+            'marcus@cyclists.com',
+            'marcus@ibooking.com',
+          ]
     await sendEMail({
       from: 'cyclists.developer@gmail.com',
       // to: receipent,

@@ -28,7 +28,8 @@ import {
 } from '@react-three/drei'
 import React from 'react'
 import addText from '@/helpers/addText'
-import { getPositionOnScene } from '@/util/fabric'
+import { getPositionOnScene, initFabricCanvas } from '@/util/fabric'
+import loadSvg from '@/helpers/loadSvg'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -70,11 +71,14 @@ const ShirtComponent = ({
   const groupRef = useRef<THREE.Group>(null)
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
+  const inputRef = React.useRef(null)
   const textRef = useRef<fabric.IText>()
+
   // const textureRef = useRef<THREE.CanvasTexture>()
   const texture = useStore((state) => state.texture)
   // Loading state
   const isLoading = useStore((state) => state.isLoading)
+  const svgGroup = useStore((state) => state.svgGroup)
   // Zoom state
   const zoomIn = useStore((state) => state.zoomIn)
   const changeZoomIn = useStore((state) => state.changeZoomIn)
@@ -134,15 +138,80 @@ const ShirtComponent = ({
       setEvent('mousedown')
     }
 
-    if (canvasRef.current) {
-      console.log(`Re-render canvasRef`)
+    if (canvasRef.current && !textureRef.current) {
       canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
+    }
+
+    if (canvasRef.current) {
       textureRef.current = new Texture(canvasRef.current.getElement())
       textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
       textureRef.current.flipY = false
       textureRef.current.needsUpdate = true
+
+      canvasRef.current.renderAll()
+      setIsLoading(false)
+      setTextureChanged(false)
     }
-  }, [canvasRef, gl.capabilities, textureRef, width])
+
+    if (textureChanged && isLoading) {
+      setIsLoading(false)
+      setTextureChanged(false)
+    }
+
+    if (colorChanged) {
+      // console.log(svgGroup)
+      // loadSvg({
+      //   canvas: canvasRef,
+      //   setSvgGroup,
+      //   setColors,
+      //   texture: texture,
+      // })
+      textureRef.current = new Texture(canvasRef.current.getElement())
+      textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
+      textureRef.current.flipY = false
+      textureRef.current.needsUpdate = true
+
+      canvasRef.current.renderAll()
+
+      setColorChanged(false)
+    }
+
+    if (textChanged) {
+      setTextChanged(false)
+    }
+  }, [
+    canvasRef,
+    colorChanged,
+    gl.capabilities,
+    isLoading,
+    setColorChanged,
+    setIsLoading,
+    setTextChanged,
+    setTextureChanged,
+    textChanged,
+    textureChanged,
+    textureRef,
+    width,
+  ])
+
+  useEffect(() => {
+    initPatch()
+
+    document
+      .getElementsByTagName('canvas')[0]
+      .addEventListener('mousedown', handleClick)
+
+    canvasRef.current.on('mouse:down', (e: any) => {
+      setActiveText(canvasRef.current.getObjects().indexOf(e.target))
+      if (e.target.text) {
+        setEditText(true)
+        controlsRef.current.enabled = false
+      } else {
+        setEditText(false)
+        controlsRef.current.enabled = true
+      }
+    })
+  })
 
   const getPosition = (e) => {
     const rect = canvasRenderedRef.current.getBoundingClientRect()
@@ -207,9 +276,9 @@ const ShirtComponent = ({
           }
         )
         var pointer = fabric.util.getPointer(
-          simEvt,
-          canvasRef.current.getSelectionElement()
-        ),
+            simEvt,
+            canvasRef.current.getSelectionElement()
+          ),
           upperCanvasEl = canvasRef.current.getSelectionElement(),
           bounds = upperCanvasEl.getBoundingClientRect(),
           boundsWidth = bounds.width || 0,
@@ -217,9 +286,9 @@ const ShirtComponent = ({
           cssScale
       } else {
         var pointer = fabric.util.getPointer(
-          e,
-          canvasRef.current.getSelectionElement()
-        ),
+            e,
+            canvasRef.current.getSelectionElement()
+          ),
           upperCanvasEl = canvasRef.current.getSelectionElement(),
           bounds = upperCanvasEl.getBoundingClientRect(),
           boundsWidth = bounds.width || 0,
@@ -294,33 +363,6 @@ const ShirtComponent = ({
     }
   }
 
-  const inputRef = React.useRef(null)
-
-  useEffect(() => {
-    initPatch()
-    // document
-    //   .getElementsByTagName('canvas')[0]
-    //   .addEventListener('mousedown', (e) => {
-    //     textureRef.current.needsUpdate = true
-    //   })
-    document
-      .getElementsByTagName('canvas')[0]
-      .addEventListener('mousedown', handleClick)
-    canvasRef.current.on('mouse:down', (e: any) => {
-      setActiveText(canvasRef.current.getObjects().indexOf(e.target))
-      if (e.target.text) {
-        setEditText(true)
-        controlsRef.current.enabled = false
-      } else {
-        setEditText(false)
-        controlsRef.current.enabled = true
-      }
-    })
-    if (textChanged) {
-      setTextChanged(false)
-    }
-  })
-
   const handleTextPosition = (e) => {
     if (isAddText) {
       addText({
@@ -339,22 +381,67 @@ const ShirtComponent = ({
     }
   }
 
+  useFrame((state, delta) => {
+    controlsRef.current.update()
+    setZoom(Math.floor(state.camera.position.z))
+
+    if (colorChanged) {
+      state.camera.position.z = state.camera.position.z + 0.001
+    }
+    if (textChanged) {
+      state.camera.position.z = state.camera.position.z + 0.001
+    }
+
+    if (!isObjectFront && cameraChanged) {
+      state.camera.position.z = -90
+      setCameraChange(false)
+    }
+
+    if (isObjectFront && cameraChanged) {
+      state.camera.position.z = 90
+      setCameraChange(false)
+    }
+
+    if (controlsRef.current && zoomOut) {
+      state.camera.position.x *= 1.1
+      state.camera.position.y *= 1.1
+      state.camera.position.z *= 1.1
+      changeZoomOut(false)
+    }
+
+    if (controlsRef.current && zoomIn) {
+      state.camera.position.x *= 0.9
+      state.camera.position.y *= 0.9
+      state.camera.position.z *= 0.9
+      changeZoomIn(false)
+    }
+
+    if (controlsRef.current && rotateRight) {
+      groupRef.current.rotation.y += -Math.PI / 4
+      changeRotateRight(false)
+    }
+
+    if (controlsRef.current && rotateLeft) {
+      groupRef.current.rotation.y += Math.PI / 4
+      changeRotateLeft(false)
+    }
+
+    // if (canvasRef.current && isAddText) {
+    //   state.gl.domElement.style.cursor = 'crosshair'
+    // }
+
+    // if (!isAddText) {
+    //   state.gl.domElement.style.cursor = hovered ? 'grab' : 'auto'
+    //   state.gl.domElement.style.cursor = clicked ? 'grabbing' : 'grab'
+    // }
+  })
+
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
     <>
       <group
         ref={groupRef}
         dispose={null}
-        // onClick={(e) => {
-        //   if (isAddText) {
-        //     handleTextPosition(e)
-        //   }
-        // }}
-        onPointerMove={(e) => {
-          if (isAddText) {
-            // gl.domElement.style.cursor = 'crosshair'
-          }
-        }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onPointerDown={() => setClicked(true)}

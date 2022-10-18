@@ -10,9 +10,14 @@ interface AddTextProps {
 
 const addText = ({ text, canvasRef, left, top }: AddTextProps) => {
   const jerseyText = new fabric.IText('Test', {
-    fontSize: 40,
+    angle: 0,
+    fontSize: 65,
     textAlign: 'center',
     fontWeight: 'bold',
+    fontFamily: 'Arial',
+    fill: '#000000',
+    stroke: '#000000',
+    strokeWidth: 1,
     left: left,
     top: top,
     originX: 'center',

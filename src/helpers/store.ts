@@ -80,7 +80,9 @@ const useStoreImpl = create<State>()((set) => ({
     height: 2048,
   },
   setTexture: (data: { path: number; width: number; height: number }) =>
-    set(() => ({ texture: data })),
+    set(() => ({
+      texture: { path: data.path, width: data.width, height: data.height },
+    })),
   colorChanged: false,
   textureChanged: false,
   setTextureChanged: (param) => set(() => ({ textureChanged: param })),
