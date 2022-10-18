@@ -651,7 +651,6 @@ const Page = (props) => {
                             <button
                               onClick={() => {
                                 setActiveText(index + 1)
-                                console.log(canvasRef.current)
                                 canvasRef.current.setActiveObject(
                                   canvasRef.current._iTextInstances[index]
                                 )

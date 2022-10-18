@@ -36,7 +36,13 @@ const LCanvas = dynamic(() => import('@/components/layout/canvas'), {
 // dom components goes here
 let price = 51.99
 const Page = (props) => {
-  const canvasRef = useRef<fabric.Canvas>()
+  const canvasRef = useRef<
+    | (fabric.Canvas & {
+        _iTextInstances: Array<any>
+        getActiveObject(): fabric.Object & { fontFamily?: string | undefined }
+      })
+    | null
+  >()
   const textureRef = useRef<THREE.Texture>()
 
   const isAddText = useStore((state) => state.isAddText)
@@ -60,22 +66,28 @@ const Page = (props) => {
   const setTextChanged = useStore((state) => state.setTextChanged)
   const setTexture = useStore((state) => state.setTexture)
   const setDimensions = useStore((state) => state.setDimensions)
+  const dimensions = useStore((state) => state.dimensions)
   const setTextActive = useStore((state) => state.setTextActive)
   const colors = useStore((state) => state.colors)
   const setColors = useStore((state) => state.setColors)
   const setSvgGroup = useStore((state) => state.setSvgGroup)
   const setIsMobileVersion = useStore((state) => state.setIsMobileVersion)
+  const isMobileVersion = useStore((state) => state.isMobileVersion)
   const inputNumberRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState('')
   const cancelModalTextRef = useRef(null)
   const [openTextModal, setOpenTextModal] = useState(false)
   const [ray, setRay] = useState({ x: 1, y: 1, z: 1 })
   const [step, setStep] = useState(1)
+  const [currentTextColor, setCurrentTextColor] = useState('#000000')
+  const [fontStroke, setFontStroke] = useState('#000000')
+  const [outlineThickness, setOutlineThickness] = useState(1)
 
   const [allText, setAllText] = useState([])
   const [activeText, setActiveText] = useState(0)
-  const [currentFont, setCurrentFont] = useState('')
+  const [currentFont, setCurrentFont] = useState('Arial')
   const [fontSize, setFontSize] = useState(30)
+  const [fontAngle, setFontAngle] = useState(0)
   const [editText, setEditText] = useState(false)
   const [mobile, setMobile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState({
@@ -97,10 +109,6 @@ const Page = (props) => {
   const [uid, setUid] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
 
-  /**
-   * NOTE: Only running on first render
-   * Check window width and set dimension for size of fabric canvas
-   */
   const getWindowDimensions = useCallback(() => {
     const width = typeof window !== 'undefined' ? window.innerWidth : undefined
 
@@ -108,95 +116,48 @@ const Page = (props) => {
       setDimensions({ width: 1024, height: 1024 })
       setIsMobileVersion(true)
       setTexture({
-        path: 1,
+        ...texture,
         width: 1024,
         height: 1024,
       })
-      initFabricCanvas({
-        canvasRef,
-        width: 1024,
-        height: 1024,
-      })
-      return loadSvg({
-        canvas: canvasRef,
-        textureRef,
-        setIsLoading,
-        setSvgGroup,
-        setColors,
-        setTextureChanged,
-        colors,
-        texture: {
-          path: 1,
-          width: 1024,
-          height: 1024,
-        },
+    } else {
+      setDimensions({ width: 2048, height: 2048 })
+      setIsMobileVersion(false)
+      setTexture({
+        ...texture,
+        width: 2048,
+        height: 2048,
       })
     }
 
-    setTexture({
-      path: 1,
-      width: 2048,
-      height: 2048,
-    })
-    setIsMobileVersion(false)
-    initFabricCanvas({
-      canvasRef,
-      width: 2048,
-      height: 2048,
-    })
-    return loadSvg({
+    loadSvg({
       canvas: canvasRef,
-      textureRef,
-      setIsLoading,
       setSvgGroup,
       setColors,
-      setTextureChanged,
-      colors,
-      texture: {
-        path: 1,
-        width: 2048,
-        height: 2048,
-      },
+      texture: texture,
+    })
+
+    return initFabricCanvas({
+      canvasRef,
+      width: dimensions.width,
+      height: dimensions.height,
     })
   }, [
-    colors,
+    dimensions.height,
+    dimensions.width,
     setColors,
     setDimensions,
-    setIsLoading,
     setIsMobileVersion,
     setSvgGroup,
     setTexture,
-    setTextureChanged,
+    texture,
   ])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !textureRef.current) {
       getWindowDimensions()
     }
   }, [getWindowDimensions])
-
-  // const getCurrentUser = (id) => {
-  //   fetch('https://39e4-180-244-130-245.ap.ngrok.io/api/getuser', {
-  //     method: 'GET',
-  //     body: JSON.stringify(id),
-  //   }).then((data) => {
-  //     console.log(data)
-  //   })
-  // }
-  // useEffect(() => {
-  //   canvasRef.current = new fabric.Canvas('canvas', {
-  //     preserveObjectStacking: true,
-  //     imageSmoothingEnabled: true,
-  //     selection: false,
-  //     width: width,
-  //     height: width,
-  //   })
-
-  //   return () => {
-  //     canvasRef.current?.dispose()
-  //     canvasRef.current = null
-  //   }
-  // }, [setTexture, setWidth, width])
 
   useEffect(() => {
     switch (step) {
@@ -262,47 +223,29 @@ const Page = (props) => {
   const handleChangeTexture = (index: number) => {
     setIsLoading(true)
     setTextureChanged(true)
-    if (mobile) {
-      setTexture({
+    canvasRef.current.clear()
+    canvasRef.current.dispose()
+    setTexture({
+      path: index + 1,
+      width: isMobileVersion ? 1024 : 2048,
+      height: isMobileVersion ? 1024 : 2048,
+    })
+    loadSvg({
+      canvas: canvasRef,
+      setSvgGroup,
+      setColors,
+      texture: {
         path: index + 1,
-        width: 1024,
-        height: 1024,
-      })
-      return loadSvg({
-        canvas: canvasRef,
-        textureRef,
-        setTextureChanged,
-        setIsLoading,
-        setSvgGroup,
-        setColors,
-        colors,
-        texture: {
-          path: index + 1,
-          width: 1024,
-          height: 1024,
-        },
-      })
-    } else {
-      setTexture({
-        path: index + 1,
-        width: 2048,
-        height: 2048,
-      })
-      return loadSvg({
-        canvas: canvasRef,
-        textureRef,
-        setTextureChanged,
-        setIsLoading,
-        setSvgGroup,
-        setColors,
-        colors,
-        texture: {
-          path: index + 1,
-          width: 2048,
-          height: 2048,
-        },
-      })
-    }
+        width: isMobileVersion ? 1024 : 2048,
+        height: isMobileVersion ? 1024 : 2048,
+      },
+    })
+
+    initFabricCanvas({
+      canvasRef,
+      width: dimensions.width,
+      height: dimensions.height,
+    })
   }
 
   const decrementAction = () => {
@@ -448,6 +391,7 @@ const Page = (props) => {
             </div>
             {Page?.r3f && props.width <= 768 ? (
               <LCanvas
+                onClick={() => handleClickCanvas()}
                 canvasRef={canvasRef}
                 width={width}
                 style={{
@@ -629,7 +573,9 @@ const Page = (props) => {
                     ) : (
                       <Text className='mr-auto text-xs text-gray-600'>
                         Choose the{' '}
-                        <b className='capitalize'>{data.id.replace('-', '')}</b>{' '}
+                        <b className='capitalize'>
+                          {data.id.replace('-', ' ')}
+                        </b>{' '}
                         colour
                       </Text>
                     )}
@@ -640,6 +586,8 @@ const Page = (props) => {
                           let newArrColors = [...colors]
                           newArrColors[index].fill = e
                           svgGroup._objects[index].set('fill', e)
+                          canvasRef.current.add(svgGroup)
+                          canvasRef.current.sendToBack(svgGroup)
                           canvasRef.current.renderAll()
                           setColorChanged(true)
                         }}
@@ -673,60 +621,57 @@ const Page = (props) => {
                   </div>
                   <div>
                     {allText.map((data, index) => (
-                      <>
+                      <div
+                        key={index}
+                        className='flex p-3'
+                        style={{
+                          flexDirection: 'column',
+                          background: '#F9F9F9',
+                        }}
+                      >
                         <div
-                          key={index}
-                          className='flex p-3'
+                          className='flex'
                           style={{
-                            flexDirection: 'column',
-                            background: '#F9F9F9',
+                            borderBottom: '1px solid grey',
+                            textAlign: 'left',
+                            textTransform: 'capitalize',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
                           }}
                         >
-                          <div
-                            className='flex'
-                            style={{
-                              borderBottom: '1px solid grey',
-                              textAlign: 'left',
-                              textTransform: 'capitalize',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <span>
-                              {index + 1}. {data}
-                            </span>
-                            <div className='flex'>
-                              <button
-                                onClick={() => {
-                                  setActiveText(index + 1)
-                                  // console.log(canvasRef.current.getObjects())
-                                  // canvasRef.current.setActiveObject(
-                                  //   canvasRef.current.item(index + 1)
-                                  // )
-                                  setEditText(true)
-                                }}
-                              >
-                                edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // canvasRef.current.remove(
-                                  //   canvasRef.current.item(index + 1)
-                                  // )
-                                  canvasRef.current.renderAll()
-                                  // console.log(canvasRef.current._objects)
-                                  setAllText(
-                                    allText.filter((item) => item !== data)
-                                  )
-                                }}
-                                style={{ marginLeft: '10px' }}
-                              >
-                                delete
-                              </button>
-                            </div>
+                          <span>
+                            {index + 1}. {data}
+                          </span>
+                          <div className='flex'>
+                            <button
+                              onClick={() => {
+                                setActiveText(index + 1)
+                                canvasRef.current.setActiveObject(
+                                  canvasRef.current._iTextInstances[index]
+                                )
+                                setEditText(true)
+                              }}
+                            >
+                              edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                canvasRef.current.remove(
+                                  canvasRef.current._iTextInstances[index]
+                                )
+                                canvasRef.current.renderAll()
+                                // console.log(canvasRef.current._objects)
+                                setAllText(
+                                  allText.filter((item) => item !== data)
+                                )
+                              }}
+                              style={{ marginLeft: '10px' }}
+                            >
+                              delete
+                            </button>
                           </div>
                         </div>
-                      </>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -736,6 +681,14 @@ const Page = (props) => {
                     className='p-3'
                     style={{ background: '#F9F9F9', color: '#3D3D3D' }}
                   >
+                    <div className='flex justify-end ml-auto'>
+                      <button
+                        className='text-xs text-gray-500 underline'
+                        onClick={() => setEditText(false)}
+                      >
+                        Close
+                      </button>
+                    </div>
                     <div key={activeText}>
                       <div
                         className='p-3'
@@ -768,12 +721,12 @@ const Page = (props) => {
                           <label htmlFor='select'>Font</label>
                           <select
                             onChange={(e) => {
-                              if (canvasRef.current) {
-                                // canvasRef.current.getActiveObject().fontFamily =
-                                //   e.target.value
-                                setTextChanged(true)
-                                setCurrentFont(e.target.value)
-                              }
+                              canvasRef.current
+                                .getActiveObject()
+                                .set<any>('fontFamily', e.target.value)
+
+                              setTextChanged(true)
+                              setCurrentFont(e.target.value)
                             }}
                             className='form-control'
                             style={{ marginLeft: '10px' }}
@@ -782,6 +735,7 @@ const Page = (props) => {
                           >
                             {fonts.map((font, index) => (
                               <option
+                                selected={font === currentFont}
                                 key={index}
                                 value={font}
                                 style={{ textTransform: 'capitalize' }}
@@ -796,7 +750,7 @@ const Page = (props) => {
                           <input
                             type='color'
                             style={{ marginLeft: '10px' }}
-                            name=''
+                            value={currentTextColor}
                             id='color'
                             onChange={(e) => {
                               // console.log(e.target.value)
@@ -804,7 +758,7 @@ const Page = (props) => {
                                 .getActiveObject()
                                 .set('fill', e.target.value)
                               setTextChanged(true)
-                              canvasRef.current.renderAll()
+                              setCurrentTextColor(e.target.value)
                             }}
                           />
                         </div>
@@ -819,14 +773,19 @@ const Page = (props) => {
                                 border: '1px solid #D4D4D4',
                               }}
                               onClick={() => {
-                                // setFontSize(
-                                //   canvasRef.current.getActiveObject().fontSize -
-                                //     1
-                                // )
-                                // canvasRef.current
-                                //   .getActiveObject()
-                                //   .set('fontSize', fontSize)
-                                // setTextChanged(true)
+                                const activeObject: any =
+                                  canvasRef.current.getActiveObject()
+
+                                canvasRef.current
+                                  .getActiveObject()
+                                  .set<any>(
+                                    'fontSize',
+                                    fontSize
+                                      ? fontSize - 1
+                                      : activeObject.fontSize - 1
+                                  )
+                                setTextChanged(true)
+                                setFontSize(activeObject.fontSize - 1)
                               }}
                             >
                               -
@@ -839,14 +798,19 @@ const Page = (props) => {
                                 border: '1px solid #D4D4D4',
                               }}
                               onClick={() => {
-                                // setFontSize(
-                                //   canvasRef.current.getActiveObject().fontSize +
-                                //     1
-                                // )
-                                // canvasRef.current
-                                //   .getActiveObject()
-                                //   .set('fontSize', fontSize)
-                                // setTextChanged(true)
+                                const activeObject: any =
+                                  canvasRef.current.getActiveObject()
+
+                                canvasRef.current
+                                  .getActiveObject()
+                                  .set<any>(
+                                    'fontSize',
+                                    fontSize
+                                      ? fontSize + 1
+                                      : activeObject.fontSize + 1
+                                  )
+                                setTextChanged(true)
+                                setFontSize(activeObject.fontSize + 1)
                               }}
                             >
                               +
@@ -872,6 +836,13 @@ const Page = (props) => {
                               margin: '3px',
                               border: '1px solid #D4D4D4',
                             }}
+                            onClick={() => {
+                              canvasRef.current
+                                .getActiveObject()
+                                .set<any>('angle', fontAngle - 1)
+                              setTextChanged(true)
+                              setFontAngle(fontAngle - 1)
+                            }}
                           >
                             -
                           </button>
@@ -881,6 +852,13 @@ const Page = (props) => {
                               background: 'F6F6F6',
                               margin: '3px',
                               border: '1px solid #D4D4D4',
+                            }}
+                            onClick={() => {
+                              canvasRef.current
+                                .getActiveObject()
+                                .set<any>('angle', fontAngle + 1)
+                              setTextChanged(true)
+                              setFontAngle(fontAngle + 1)
                             }}
                           >
                             +
@@ -900,8 +878,16 @@ const Page = (props) => {
                         <input
                           type='color'
                           style={{ marginLeft: '10px' }}
-                          name=''
+                          value={fontStroke}
                           id='outlineColor'
+                          onChange={(e) => {
+                            // console.log(e.target.value)
+                            canvasRef.current
+                              .getActiveObject()
+                              .set('stroke', e.target.value)
+                            setTextChanged(true)
+                            setFontStroke(e.target.value)
+                          }}
                         />
                       </div>
                       <div
@@ -916,11 +902,19 @@ const Page = (props) => {
                         <label htmlFor='color'>Outline Thickness</label>
                         <div style={{ marginLeft: '10px', display: 'flex' }}>
                           <button
+                            disabled={outlineThickness == 0}
                             style={{
                               padding: '0px 20px',
                               background: 'F6F6F6',
                               margin: '3px',
                               border: '1px solid #D4D4D4',
+                            }}
+                            onClick={() => {
+                              canvasRef.current
+                                .getActiveObject()
+                                .set<any>('strokeWidth', outlineThickness - 1)
+                              setTextChanged(true)
+                              setOutlineThickness(outlineThickness - 1)
                             }}
                           >
                             -
@@ -931,6 +925,13 @@ const Page = (props) => {
                               background: 'F6F6F6',
                               margin: '3px',
                               border: '1px solid #D4D4D4',
+                            }}
+                            onClick={() => {
+                              canvasRef.current
+                                .getActiveObject()
+                                .set<any>('strokeWidth', outlineThickness + 1)
+                              setTextChanged(true)
+                              setOutlineThickness(outlineThickness + 1)
                             }}
                           >
                             +
@@ -1028,16 +1029,16 @@ const Page = (props) => {
               />
               <select
                 onChange={handleChangeForm}
+                defaultValue={42808925978823}
                 name='id'
                 className='relative flex items-stretch h-auto text-black bg-white border py-[0.65rem] border-1 rounded-[0.25rem] md:items-center md:my-auto border-[#666]'
               >
-                <option value={42778299957447}>XS</option>
-                <option value={42778299957447}>S</option>
-                <option value={42778299957447}>M</option>
-                <option value={42778299957447}>L</option>
-                <option value={42778299957447}>XL</option>
-                <option value={42778299957447}>2XL</option>
-                <option value={42778299957447}>3XL</option>
+                <option value={42808925978823}>S</option>
+                <option value={42808926011591}>M</option>
+                <option value={42808926044359}>L</option>
+                <option value={42808926077127}>XL</option>
+                <option value={42808926109895}>2XL</option>
+                <option value={42808926142663}>3XL</option>
               </select>
               <button
                 // onClick={handleSubmit}
@@ -1104,6 +1105,7 @@ const Page = (props) => {
           </div>
           {Page?.r3f && props.width > 768 ? (
             <LCanvas
+              onClick={() => handleClickCanvas()}
               canvasRef={canvasRef}
               width={width}
               style={{
