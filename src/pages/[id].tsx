@@ -1,17 +1,15 @@
 import cn from 'clsx'
-import { GetServerSideProps, GetStaticProps } from 'next'
+import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { fabric } from 'fabric'
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
-import { getProductsInCollection } from '../lib/shopify'
 import useStore from '@/helpers/store'
 
 import Text from '@/components/dom/Text'
 import Navbar from '@/components/dom/Navbar'
 import Dropdowns from '@/components/dom/Dropdowns'
 import Image from '@/components/dom/Image'
-import ColorPicker from '@/components/dom/ColorPicker'
 import { jerseyStyles } from '@/constants'
 import InputNumber from '@/components/dom/InputNumber'
 import DropdownControls from '@/components/dom/DropdownControls'
@@ -19,7 +17,7 @@ import loadSvg from '@/helpers/loadSvg'
 import addText from '@/helpers/addText'
 import ModalText from '@/components/dom/ModalText'
 import Color from '@/components/dom/Color'
-import THREE from 'three'
+import { Texture } from 'three/src/textures/Texture'
 import { initFabricCanvas } from '@/util/fabric'
 
 // Dynamic import is used to prevent a payload when the website start that will include threejs r3f etc..
@@ -43,7 +41,7 @@ const Page = (props) => {
       })
     | null
   >()
-  const textureRef = useRef<THREE.Texture>()
+  const textureRef = useRef<Texture>()
 
   const isAddText = useStore((state) => state.isAddText)
   const setIsAddText = useStore((state) => state.setIsAddText)
@@ -89,7 +87,6 @@ const Page = (props) => {
   const [fontSize, setFontSize] = useState(30)
   const [fontAngle, setFontAngle] = useState(0)
   const [editText, setEditText] = useState(false)
-  const [mobile, setMobile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState({
     stepOne: false,
     stepTwo: false,
@@ -102,11 +99,10 @@ const Page = (props) => {
     fontFamily: 'Roboto',
   })
   const [formData, setFormData] = useState({
-    id: null,
+    id: 42808925978823,
     quantity: 1,
   })
 
-  const [uid, setUid] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
 
   const getWindowDimensions = useCallback(() => {
@@ -211,7 +207,7 @@ const Page = (props) => {
       },
       body: JSON.stringify({
         attachment: encodedData,
-        userId: undefined,
+        userId: props.userId,
         id: formData.id,
         quantity: formData.quantity,
       }),
@@ -1002,18 +998,11 @@ const Page = (props) => {
             onSubmit={handleSubmit}
           >
             <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
-              {/* <input
-                type='text'
-                hidden
-                name='id'
-                value={42778299957447}
-                readOnly
-              /> */}
               <input
                 type='text'
                 hidden
                 name='note'
-                value='JERSEY-CUSTOM'
+                value={`JERSEY-CUSTOM-${props.userId}`}
                 readOnly
               />
               <InputNumber
@@ -1029,7 +1018,6 @@ const Page = (props) => {
               />
               <select
                 onChange={handleChangeForm}
-                defaultValue={42808925978823}
                 name='id'
                 className='relative flex items-stretch h-auto text-black bg-white border py-[0.65rem] border-1 rounded-[0.25rem] md:items-center md:my-auto border-[#666]'
               >

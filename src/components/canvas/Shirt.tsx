@@ -1,35 +1,21 @@
 /* eslint-disable no-var */
-import type { Mesh } from 'three/src/objects/Mesh'
-import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
 import { Texture } from 'three/src/textures/Texture'
-import type { ThreeEvent, Vector3 } from '@react-three/fiber'
+import type { Vector3 } from '@react-three/fiber'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { fabric } from 'fabric'
 import useStore from '@/helpers/store'
-import {
-  useState,
-  useRef,
-  Suspense,
-  MutableRefObject,
-  useEffect,
-  useCallback,
-} from 'react'
+import { useState, useRef, MutableRefObject, useEffect } from 'react'
 import {
   useGLTF,
-  Environment,
   OrbitControls,
   AdaptiveDpr,
-  Stats,
-  Preload,
   BakeShadows,
   AdaptiveEvents,
 } from '@react-three/drei'
 import React from 'react'
 import addText from '@/helpers/addText'
-import { getPositionOnScene, initFabricCanvas } from '@/util/fabric'
-import loadSvg from '@/helpers/loadSvg'
 
 type GLTFResult = GLTF & {
   nodes: {
