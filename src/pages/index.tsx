@@ -1,19 +1,12 @@
 import cn from 'clsx'
 import { GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
-import {
-  useState,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-} from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { fabric } from 'fabric'
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
 import useStore from '@/helpers/store'
 
 import Text from '@/components/dom/Text'
-import Navbar from '@/components/dom/Navbar'
 import Dropdowns from '@/components/dom/Dropdowns'
 import Image from '@/components/dom/Image'
 import { jerseyStyles } from '@/constants'
@@ -23,9 +16,8 @@ import loadSvg from '@/helpers/loadSvg'
 import addText from '@/helpers/addText'
 import ModalText from '@/components/dom/ModalText'
 import Color from '@/components/dom/Color'
-import { getPositionOnScene, initFabricCanvas } from '@/util/fabric'
-import useLoadTexture from '@/components/hooks/useLoadTexture'
-import useWindowDimensions from '@/components/hooks/useWindowDimensions'
+import { initFabricCanvas } from '@/util/fabric'
+import { Texture } from 'three/src/textures/Texture'
 
 // Dynamic import is used to prevent a payload when the website start that will include threejs r3f etc..
 // WARNING ! errors might get obfuscated by using dynamic import.
@@ -48,7 +40,7 @@ const Page = (props) => {
       })
     | null
   >()
-  const textureRef = useRef<THREE.Texture>()
+  const textureRef = useRef<Texture>()
 
   const isAddText = useStore((state) => state.isAddText)
   const setIsAddText = useStore((state) => state.setIsAddText)
@@ -94,7 +86,6 @@ const Page = (props) => {
   const [fontSize, setFontSize] = useState(30)
   const [fontAngle, setFontAngle] = useState(0)
   const [editText, setEditText] = useState(false)
-  const [mobile, setMobile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState({
     stepOne: false,
     stepTwo: false,
@@ -107,11 +98,10 @@ const Page = (props) => {
     fontFamily: 'Roboto',
   })
   const [formData, setFormData] = useState({
-    id: null,
+    id: 42808925978823,
     quantity: 1,
   })
 
-  const [uid, setUid] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
 
   const getWindowDimensions = useCallback(() => {
@@ -216,7 +206,7 @@ const Page = (props) => {
       },
       body: JSON.stringify({
         attachment: encodedData,
-        userId: undefined,
+        userId: props.userId,
         id: formData.id,
         quantity: formData.quantity,
       }),
@@ -336,9 +326,10 @@ const Page = (props) => {
         setTextChanged(false)
       }, 300)
       setAllText((allText) => [...allText, text])
-      if (width < 800) {
+      if (isMobileVersion) {
         addText({
           text: text,
+          fontSize: 40,
           canvasRef: canvasRef,
           left: ray.x * 1024,
           top: ray.y * 1024,
@@ -346,6 +337,7 @@ const Page = (props) => {
       } else {
         addText({
           text: text,
+          fontSize: 65,
           canvasRef: canvasRef,
           left: ray.x * 2048,
           top: ray.y * 2048,
@@ -396,6 +388,8 @@ const Page = (props) => {
             </div>
             {Page?.r3f && props.width <= 768 ? (
               <LCanvas
+                setRay={setRay}
+                textureRef={textureRef}
                 onClick={() => handleClickCanvas()}
                 canvasRef={canvasRef}
                 width={width}
@@ -695,13 +689,7 @@ const Page = (props) => {
                       </button>
                     </div>
                     <div key={activeText}>
-                      <div
-                        className='p-3'
-                        style={{
-                          borderBottom: '1px solid grey',
-                          width: '100%',
-                        }}
-                      >
+                      <div className='w-full p-3 border-b border-gray-500 border-solid'>
                         <input
                           type='text'
                           placeholder='Enter text here'
@@ -713,15 +701,7 @@ const Page = (props) => {
                           }}
                         />
                       </div>
-                      <div
-                        className='flex p-3'
-                        style={{
-                          borderBottom: '1px solid grey',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
+                      <div className='flex flex-col p-3 border-b border-gray-500 border-solid lg:flex-row lg:justify-between lg:items-center'>
                         <div>
                           <label htmlFor='select'>Font</label>
                           <select
@@ -735,7 +715,7 @@ const Page = (props) => {
                             }}
                             className='form-control'
                             style={{ marginLeft: '10px' }}
-                            name=''
+                            defaultValue={fonts[0]}
                             id='select'
                           >
                             {fonts.map((font, index) => (
@@ -823,24 +803,11 @@ const Page = (props) => {
                           </div>
                         </div>
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='rotation'>Text Rotation</label>
                         <div style={{ marginLeft: '10px', display: 'flex' }}>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -852,12 +819,7 @@ const Page = (props) => {
                             -
                           </button>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -870,15 +832,7 @@ const Page = (props) => {
                           </button>
                         </div>
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='outlineColor'>Outline Color</label>
                         <input
                           type='color'
@@ -895,25 +849,12 @@ const Page = (props) => {
                           }}
                         />
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='color'>Outline Thickness</label>
                         <div style={{ marginLeft: '10px', display: 'flex' }}>
                           <button
                             disabled={outlineThickness == 0}
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -925,12 +866,7 @@ const Page = (props) => {
                             -
                           </button>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -1007,18 +943,11 @@ const Page = (props) => {
             onSubmit={handleSubmit}
           >
             <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
-              {/* <input
-                type='text'
-                hidden
-                name='id'
-                value={42778299957447}
-                readOnly
-              /> */}
               <input
                 type='text'
                 hidden
                 name='note'
-                value='JERSEY-CUSTOM'
+                value={`JERSEY-CUSTOM-${props.userId}`}
                 readOnly
               />
               <InputNumber
@@ -1034,7 +963,6 @@ const Page = (props) => {
               />
               <select
                 onChange={handleChangeForm}
-                defaultValue={42808925978823}
                 name='id'
                 className='relative flex items-stretch h-auto text-black bg-white border py-[0.65rem] border-1 rounded-[0.25rem] md:items-center md:my-auto border-[#666]'
               >
@@ -1110,6 +1038,8 @@ const Page = (props) => {
           </div>
           {Page?.r3f && props.width > 768 ? (
             <LCanvas
+              setRay={setRay}
+              textureRef={textureRef}
               onClick={() => handleClickCanvas()}
               canvasRef={canvasRef}
               width={width}
@@ -1194,6 +1124,7 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       title:
         'Cyclists | Jersey Customiser. Your jersey just the way you want it.',
+      useId: 12345678,
     },
   }
 }

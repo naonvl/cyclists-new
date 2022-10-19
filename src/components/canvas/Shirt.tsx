@@ -144,13 +144,6 @@ const ShirtComponent = ({
     }
 
     if (colorChanged) {
-      // console.log(svgGroup)
-      // loadSvg({
-      //   canvas: canvasRef,
-      //   setSvgGroup,
-      //   setColors,
-      //   texture: texture,
-      // })
       textureRef.current = new Texture(canvasRef.current.getElement())
       textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
       textureRef.current.flipY = false
@@ -180,15 +173,52 @@ const ShirtComponent = ({
   ])
 
   useEffect(() => {
-    initPatch()
+    // initPatch()
 
-    document
-      .getElementsByTagName('canvas')[0]
-      .addEventListener('mousedown', handleClick)
+    if (isMobileVersion) {
+      document
+        .getElementsByTagName('canvas')[0]
+        .addEventListener('touchstart', (e) => {
+          const rect = canvasRenderedRef.current.getBoundingClientRect()
+          const array = [
+            (e.changedTouches[0].clientX - rect.left) / rect.width,
+            (e.changedTouches[0].clientY - rect.top) / rect.height,
+          ]
+          pointer.fromArray(array)
+          // Get intersects
+          mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+          raycaster.setFromCamera(mouse, camera)
+          const intersects = raycaster.intersectObjects(scene.children)
+          textureRef.current.needsUpdate = true
+
+          if (intersects.length > 0 && intersects[0].uv) {
+            let uv = intersects[0].uv
+            setRay(uv)
+            const positionOnScene = {
+              x: Math.round(uv.x * 1024) - 4.5,
+              y: Math.round(uv.y * 1024) - 5.5,
+            }
+
+            const canvasRect = canvasRef.current.getCenter()
+            const simEvt = new globalThis.MouseEvent(e.type, {
+              clientX: canvasRect.left + positionOnScene.x,
+              clientY: canvasRect.top + positionOnScene.y,
+            })
+
+            canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+          }
+          return
+        })
+    }
+    if (!isMobileVersion) {
+      document
+        .getElementsByTagName('canvas')[0]
+        .addEventListener('mousedown', handleClick)
+    }
 
     canvasRef.current.on('mouse:down', (e: any) => {
       setActiveText(canvasRef.current.getObjects().indexOf(e.target))
-      if (e.target.text) {
+      if (e.target && e.target.text) {
         setEditText(true)
         controlsRef.current.enabled = false
       } else {
@@ -209,9 +239,6 @@ const ShirtComponent = ({
     mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
     raycaster.setFromCamera(mouse, camera)
     const intersects = raycaster.intersectObjects(scene.children)
-    // textureRef.current = new Texture(canvasRef.current.getElement())
-    // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-    // textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
 
     if (intersects.length > 0 && intersects[0].uv) {
@@ -234,135 +261,115 @@ const ShirtComponent = ({
     } else {
       fabric.Object.prototype.cornerSize = 18
     }
-    fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
-      var simEvt
-      if (e.touches != undefined) {
-        simEvt = new MouseEvent(
-          {
-            touchstart: 'mousedown',
-            touchmove: 'mousemove',
-            touchend: 'mouseup',
-          }[e.type],
-          {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: 1,
-            screenX: Math.round(e.changedTouches[0].screenX),
-            screenY: Math.round(e.changedTouches[0].screenY),
-            clientX: Math.round(e.changedTouches[0].clientX),
-            clientY: Math.round(e.changedTouches[0].clientY),
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false,
-            button: 0,
-            relatedTarget: null,
-          }
-        )
-        var pointer = fabric.util.getPointer(
-            simEvt,
-            canvasRef.current.getSelectionElement()
-          ),
-          upperCanvasEl = canvasRef.current.getSelectionElement(),
-          bounds = upperCanvasEl.getBoundingClientRect(),
-          boundsWidth = bounds.width || 0,
-          boundsHeight = bounds.height || 0,
-          cssScale
-      } else {
-        var pointer = fabric.util.getPointer(
-            e,
-            canvasRef.current.getSelectionElement()
-          ),
-          upperCanvasEl = canvasRef.current.getSelectionElement(),
-          bounds = upperCanvasEl.getBoundingClientRect(),
-          boundsWidth = bounds.width || 0,
-          boundsHeight = bounds.height || 0,
-          cssScale
-      }
-      if (!boundsWidth || !boundsHeight) {
-        if ('top' in bounds && 'bottom' in bounds) {
-          boundsHeight = Math.abs(bounds.top - bounds.bottom)
-        }
-        if ('right' in bounds && 'left' in bounds) {
-          boundsWidth = Math.abs(bounds.right - bounds.left)
-        }
-      }
-      canvasRef.current.calcOffset()
-      pointer.x = Math.round(pointer.x) - canvasRef.current.getCenter().left
-      pointer.y = Math.round(pointer.y) - canvasRef.current.getCenter().top
-      /* BEGIN PATCH CODE */
-      if (e.target !== canvasRef.current.getSelectionElement()) {
-        var positionOnScene
-        if (width < 800) {
-          positionOnScene = getPosition(simEvt)
-          if (positionOnScene) {
-            // console.log(simEvt.type);
-            pointer.x = positionOnScene.x
-            pointer.y = positionOnScene.y
-          }
-        } else {
-          positionOnScene = getPosition(e)
+    // fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
+    // let simEvt
+    // let pointer
+    // let bounds
+    // let boundsWidth
+    // let boundsHeight = null
+    // let cssScale = null
+    // let upperCanvasEl = canvasRef.current.getSelectionElement()
+    // if (isMobileVersion) {
+    //   simEvt = new MouseEvent(
+    //     {
+    //       touchstart: 'mousedown',
+    //       touchmove: 'mousemove',
+    //       touchend: 'mouseup',
+    //     }[e.type],
+    //     {
+    //       bubbles: true,
+    //       cancelable: true,
+    //       view: window,
+    //       detail: 1,
+    //       screenX: Math.round(e.changedTouches[0].screenX),
+    //       screenY: Math.round(e.changedTouches[0].screenY),
+    //       clientX: Math.round(e.changedTouches[0].clientX),
+    //       clientY: Math.round(e.changedTouches[0].clientY),
+    //       ctrlKey: false,
+    //       altKey: false,
+    //       shiftKey: false,
+    //       metaKey: false,
+    //       button: 0,
+    //       relatedTarget: null,
+    //     }
+    //   )
+    //   pointer = fabric.util.getPointer(
+    //     simEvt,
+    //     canvasRef.current.getSelectionElement()
+    //   )
+    //     bounds = upperCanvasEl.getBoundingClientRect()
+    //     boundsWidth = bounds.width || 0
+    //     boundsHeight = bounds.height || 0
+    // } else {
+    //   pointer = fabric.util.getPointer(
+    //     e,
+    //     canvasRef.current.getSelectionElement()
+    //   )
+    //     bounds = upperCanvasEl.getBoundingClientRect()
+    //     boundsWidth = bounds.width || 0
+    //     boundsHeight = bounds.height || 0
+    // }
+    // if (!boundsWidth || !boundsHeight) {
+    //   if ('top' in bounds && 'bottom' in bounds) {
+    //     boundsHeight = Math.abs(bounds.top - bounds.bottom)
+    //   }
+    //   if ('right' in bounds && 'left' in bounds) {
+    //     boundsWidth = Math.abs(bounds.right - bounds.left)
+    //   }
+    // }
+    // canvasRef.current.calcOffset()
+    // pointer.x = Math.round(pointer.x) - canvasRef.current.getCenter().left
+    // pointer.y = Math.round(pointer.y) - canvasRef.current.getCenter().top
+    // /* BEGIN PATCH CODE */
+    // if (e.target !== canvasRef.current.getSelectionElement()) {
+    //   var positionOnScene
+    //   if (width < 800) {
+    //     positionOnScene = getPosition(simEvt)
+    //     if (positionOnScene) {
+    //       // console.log(simEvt.type);
+    //       pointer.x = positionOnScene.x
+    //       pointer.y = positionOnScene.y
+    //     }
+    //   } else {
+    //     positionOnScene = getPosition(e)
 
-          if (positionOnScene) {
-            // console.log(e.type);
-            pointer.x = positionOnScene.x
-            pointer.y = positionOnScene.y
-          }
-        }
-      }
-      /* END PATCH CODE */
-      if (!ignoreZoom) {
-        pointer = canvasRef.current.restorePointerVpt(pointer)
-      }
+    //     if (positionOnScene) {
+    //       // console.log(e.type);
+    //       pointer.x = positionOnScene.x
+    //       pointer.y = positionOnScene.y
+    //     }
+    //   }
+    // }
+    // /* END PATCH CODE */
+    // if (!ignoreZoom) {
+    //   pointer = canvasRef.current.restorePointerVpt(pointer)
+    // }
 
-      if (boundsWidth === 0 || boundsHeight === 0) {
-        cssScale = { width: 1, height: 1 }
-      } else {
-        cssScale = {
-          width: upperCanvasEl.width / boundsWidth,
-          height: upperCanvasEl.height / boundsHeight,
-        }
-      }
+    // if (boundsWidth === 0 || boundsHeight === 0) {
+    //   cssScale = { width: 1, height: 1 }
+    // } else {
+    //   cssScale = {
+    //     width: upperCanvasEl.width / boundsWidth,
+    //     height: upperCanvasEl.height / boundsHeight,
+    //   }
+    // }
 
-      return {
-        x: pointer.x * cssScale.width,
-        y: pointer.y * cssScale.height,
-      }
-    }
-
-    // canvasRef.current.on('mouse:down', (e) => {
-    //   console.log(e)
-    // })
+    //   return {
+    //     x: pointer.x * cssScale.width,
+    //     y: pointer.y * cssScale.height,
+    //   }
+    // }
   }
   const handleClick = (e) => {
     const positionOnScene = getPosition(e)
     if (positionOnScene) {
       const canvasRect = canvasRef.current.getCenter()
-      const simEvt = new MouseEvent(e.type, {
+      const simEvt = new globalThis.MouseEvent(e.type, {
         clientX: canvasRect.left + positionOnScene.x,
         clientY: canvasRect.top + positionOnScene.y,
       })
 
       canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-    }
-  }
-
-  const handleTextPosition = (e) => {
-    if (isAddText) {
-      addText({
-        text,
-        canvasRef,
-        left: e.intersections[0].uv.x * dimensions.width,
-        top: e.intersections[0].uv.y * dimensions.height,
-      })
-      // textRef.current = jerseyText
-      // textureRef.current = new Texture(canvasRef.current.getElement())
-      // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-      // textureRef.current.flipY = false
-      // textureRef.current.needsUpdate = true
-      // gl.domElement.style.cursor = 'auto'
-      return setIsAddText(false)
     }
   }
 
@@ -410,15 +417,6 @@ const ShirtComponent = ({
       groupRef.current.rotation.y += Math.PI / 4
       changeRotateLeft(false)
     }
-
-    // if (canvasRef.current && isAddText) {
-    //   state.gl.domElement.style.cursor = 'crosshair'
-    // }
-
-    // if (!isAddText) {
-    //   state.gl.domElement.style.cursor = hovered ? 'grab' : 'auto'
-    //   state.gl.domElement.style.cursor = clicked ? 'grabbing' : 'grab'
-    // }
   })
 
   // Return the view, these are regular Threejs elements expressed in JSX

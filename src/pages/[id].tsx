@@ -7,7 +7,6 @@ import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
 import useStore from '@/helpers/store'
 
 import Text from '@/components/dom/Text'
-import Navbar from '@/components/dom/Navbar'
 import Dropdowns from '@/components/dom/Dropdowns'
 import Image from '@/components/dom/Image'
 import { jerseyStyles } from '@/constants'
@@ -327,9 +326,10 @@ const Page = (props) => {
         setTextChanged(false)
       }, 300)
       setAllText((allText) => [...allText, text])
-      if (width < 800) {
+      if (isMobileVersion) {
         addText({
           text: text,
+          fontSize: 40,
           canvasRef: canvasRef,
           left: ray.x * 1024,
           top: ray.y * 1024,
@@ -337,6 +337,7 @@ const Page = (props) => {
       } else {
         addText({
           text: text,
+          fontSize: 65,
           canvasRef: canvasRef,
           left: ray.x * 2048,
           top: ray.y * 2048,
@@ -387,6 +388,8 @@ const Page = (props) => {
             </div>
             {Page?.r3f && props.width <= 768 ? (
               <LCanvas
+                setRay={setRay}
+                textureRef={textureRef}
                 onClick={() => handleClickCanvas()}
                 canvasRef={canvasRef}
                 width={width}
@@ -686,13 +689,7 @@ const Page = (props) => {
                       </button>
                     </div>
                     <div key={activeText}>
-                      <div
-                        className='p-3'
-                        style={{
-                          borderBottom: '1px solid grey',
-                          width: '100%',
-                        }}
-                      >
+                      <div className='w-full p-3 border-b border-gray-500 border-solid'>
                         <input
                           type='text'
                           placeholder='Enter text here'
@@ -704,15 +701,7 @@ const Page = (props) => {
                           }}
                         />
                       </div>
-                      <div
-                        className='flex p-3'
-                        style={{
-                          borderBottom: '1px solid grey',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
+                      <div className='flex flex-col p-3 border-b border-gray-500 border-solid lg:flex-row lg:justify-between lg:items-center'>
                         <div>
                           <label htmlFor='select'>Font</label>
                           <select
@@ -726,7 +715,7 @@ const Page = (props) => {
                             }}
                             className='form-control'
                             style={{ marginLeft: '10px' }}
-                            name=''
+                            defaultValue={fonts[0]}
                             id='select'
                           >
                             {fonts.map((font, index) => (
@@ -814,24 +803,11 @@ const Page = (props) => {
                           </div>
                         </div>
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='rotation'>Text Rotation</label>
                         <div style={{ marginLeft: '10px', display: 'flex' }}>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -843,12 +819,7 @@ const Page = (props) => {
                             -
                           </button>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -861,15 +832,7 @@ const Page = (props) => {
                           </button>
                         </div>
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='outlineColor'>Outline Color</label>
                         <input
                           type='color'
@@ -886,25 +849,12 @@ const Page = (props) => {
                           }}
                         />
                       </div>
-                      <div
-                        className='p-3'
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          borderBottom: '1px solid grey',
-                        }}
-                      >
+                      <div className='flex items-center p-3 border-b border-gray-500 border-solid lg:justify-end'>
                         <label htmlFor='color'>Outline Thickness</label>
                         <div style={{ marginLeft: '10px', display: 'flex' }}>
                           <button
                             disabled={outlineThickness == 0}
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -916,12 +866,7 @@ const Page = (props) => {
                             -
                           </button>
                           <button
-                            style={{
-                              padding: '0px 20px',
-                              background: 'F6F6F6',
-                              margin: '3px',
-                              border: '1px solid #D4D4D4',
-                            }}
+                            className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
                             onClick={() => {
                               canvasRef.current
                                 .getActiveObject()
@@ -1093,6 +1038,8 @@ const Page = (props) => {
           </div>
           {Page?.r3f && props.width > 768 ? (
             <LCanvas
+              setRay={setRay}
+              textureRef={textureRef}
               onClick={() => handleClickCanvas()}
               canvasRef={canvasRef}
               width={width}

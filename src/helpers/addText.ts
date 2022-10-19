@@ -3,15 +3,16 @@ import { MutableRefObject } from 'react'
 
 interface AddTextProps {
   text: string
+  fontSize: number
   canvasRef: MutableRefObject<fabric.Canvas | null>
   left: number
   top: number
 }
 
-const addText = ({ text, canvasRef, left, top }: AddTextProps) => {
-  const jerseyText = new fabric.IText('Test', {
+const addText = ({ text, fontSize, canvasRef, left, top }: AddTextProps) => {
+  const jerseyText = new fabric.IText(text, {
     angle: 0,
-    fontSize: 65,
+    fontSize: fontSize,
     textAlign: 'center',
     fontWeight: 'bold',
     fontFamily: 'Arial',
