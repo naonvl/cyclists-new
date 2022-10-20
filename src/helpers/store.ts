@@ -56,6 +56,8 @@ interface State {
     width: number
     height: number
   }
+  editText: boolean
+  setEditText: (param: boolean) => void
   setTexture: (data: { path: number; width: number; height: number }) => void
   isAddText: boolean
   setIsAddText: (param: boolean) => void
@@ -64,6 +66,8 @@ interface State {
 }
 
 const useStoreImpl = create<State>()((set) => ({
+  editText: false,
+  setEditText: (param) => set(() => ({ editText: param })),
   isMobileVersion: false,
   setIsMobileVersion: (param) => set(() => ({ isMobileVersion: param })),
   dimensions: {

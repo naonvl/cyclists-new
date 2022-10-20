@@ -70,6 +70,8 @@ const Page = (props) => {
   const setSvgGroup = useStore((state) => state.setSvgGroup)
   const setIsMobileVersion = useStore((state) => state.setIsMobileVersion)
   const isMobileVersion = useStore((state) => state.isMobileVersion)
+  const editText = useStore((state) => state.editText)
+  const setEditText = useStore((state) => state.setEditText)
   const inputNumberRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState('')
   const cancelModalTextRef = useRef(null)
@@ -85,7 +87,6 @@ const Page = (props) => {
   const [currentFont, setCurrentFont] = useState('Arial')
   const [fontSize, setFontSize] = useState(30)
   const [fontAngle, setFontAngle] = useState(0)
-  const [editText, setEditText] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState({
     stepOne: false,
     stepTwo: false,
@@ -663,6 +664,7 @@ const Page = (props) => {
                                 setAllText(
                                   allText.filter((item) => item !== data)
                                 )
+                                setTextChanged(true)
                               }}
                               style={{ marginLeft: '10px' }}
                             >

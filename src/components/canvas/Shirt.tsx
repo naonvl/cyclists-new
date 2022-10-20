@@ -1,12 +1,11 @@
 /* eslint-disable no-var */
 import { Texture } from 'three/src/textures/Texture'
-import type { Vector3 } from '@react-three/fiber'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { fabric } from 'fabric'
 import useStore from '@/helpers/store'
-import { useState, useRef, MutableRefObject, useEffect } from 'react'
+import { useRef, MutableRefObject, useEffect, useCallback } from 'react'
 import {
   useGLTF,
   OrbitControls,
@@ -15,7 +14,6 @@ import {
   AdaptiveEvents,
 } from '@react-three/drei'
 import React from 'react'
-import addText from '@/helpers/addText'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -57,13 +55,9 @@ const ShirtComponent = ({
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
   const inputRef = React.useRef(null)
-  const textRef = useRef<fabric.IText>()
 
-  // const textureRef = useRef<THREE.CanvasTexture>()
-  const texture = useStore((state) => state.texture)
   // Loading state
   const isLoading = useStore((state) => state.isLoading)
-  const svgGroup = useStore((state) => state.svgGroup)
   // Zoom state
   const zoomIn = useStore((state) => state.zoomIn)
   const changeZoomIn = useStore((state) => state.changeZoomIn)
@@ -86,44 +80,96 @@ const ShirtComponent = ({
   const setColorChanged = useStore((state) => state.setColorChanged)
   const textChanged = useStore((state) => state.textChanged)
   const setTextChanged = useStore((state) => state.setTextChanged)
-  const isAddText = useStore((state) => state.isAddText)
   const setIsLoading = useStore((state) => state.setIsLoading)
-  const setIsAddText = useStore((state) => state.setIsAddText)
   const setTextureChanged = useStore((state) => state.setTextureChanged)
-  const setSvgGroup = useStore((state) => state.setSvgGroup)
-  const setColors = useStore((state) => state.setColors)
-  const colors = useStore((state) => state.colors)
-  const dimensions = useStore((state) => state.dimensions)
   const isMobileVersion = useStore((state) => state.isMobileVersion)
-  // var raycaster = new THREE.Raycaster()
-  // var mouse = new THREE.Vector2()
-  const [localIntersections, setLocalIntersections] = useState<Vector3>()
-  const [localDistance, setLocalDistance] = useState(90)
-  const [event, setEvent] = useState<'touchstart' | 'mousedown'>('touchstart')
-  const [getUv, setGetUv] = useState() as any
-  const [allText, setAllText] = useState([])
-  const [text, setText] = useState('')
-
-  // const inputRef = React.useRef(null)
-  var raycastContainer =
-    document.getElementById('rendered').children[0].childNodes[0]
+  const dimensions = useStore((state) => state.dimensions)
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
   const [aoMapout] = useLoader(TextureLoader, ['/textures/ao_out.png'])
   const [aoMapzipp] = useLoader(TextureLoader, ['/textures/ao_zip.png'])
   const [bump] = useLoader(TextureLoader, ['/textures/DisplacementMap.jpg'])
 
-  const [hovered, setHovered] = useState(false)
-  const [clicked, setClicked] = useState(false)
+  const getPosition = useCallback(
+    (e) => {
+      const rect = canvasRenderedRef.current.getBoundingClientRect()
+      let clientSize = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+      }
+      if (e.changedTouches) {
+        clientSize = {
+          clientX: e.changedTouches[0].clientX,
+          clientY: e.changedTouches[0].clientY,
+        }
+      }
+      const array = [
+        (clientSize.clientX - rect.left) / rect.width,
+        (clientSize.clientY - rect.top) / rect.height,
+      ]
+      pointer.fromArray(array)
+      // Get intersects
+      mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(scene.children)
+      textureRef.current.needsUpdate = true
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        let uv = intersects[0].uv
+        setRay(uv)
+        return {
+          x: Math.round(uv.x * dimensions.width) - 4.5,
+          y: Math.round(uv.y * dimensions.height) - 5.5,
+        }
+      }
+      return null
+    },
+    [
+      pointer,
+      mouse,
+      raycaster,
+      camera,
+      scene.children,
+      textureRef,
+      setRay,
+      dimensions.width,
+      dimensions.height,
+    ]
+  )
+
+  const handleClick = useCallback(
+    (e) => {
+      const positionOnScene = getPosition(e)
+      if (positionOnScene) {
+        const canvasRect = canvasRef.current.getCenter()
+        const simEvt = new globalThis.MouseEvent(e.type, {
+          clientX: canvasRect.left + positionOnScene.x,
+          clientY: canvasRect.top + positionOnScene.y,
+        })
+
+        canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+      }
+    },
+    [canvasRef, getPosition]
+  )
 
   useEffect(() => {
-    if (width < 800) {
-      setEvent('touchstart')
-    } else {
-      setEvent('mousedown')
-    }
-
     if (canvasRef.current && !textureRef.current) {
+      if (!isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('mousedown', (e) => {
+            handleClick(e)
+          })
+      }
+
+      if (isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('touchstart', (e) => {
+            handleClick(e)
+          })
+      }
       canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
     }
 
@@ -161,7 +207,9 @@ const ShirtComponent = ({
     canvasRef,
     colorChanged,
     gl.capabilities,
+    handleClick,
     isLoading,
+    isMobileVersion,
     setColorChanged,
     setIsLoading,
     setTextChanged,
@@ -173,48 +221,41 @@ const ShirtComponent = ({
   ])
 
   useEffect(() => {
-    // initPatch()
+    // if (isMobileVersion) {
+    //   document
+    //     .getElementsByTagName('canvas')[0]
+    //     .addEventListener('touchstart', (e) => {
+    //       const rect = canvasRenderedRef.current.getBoundingClientRect()
+    //       const array = [
+    //         (e.changedTouches[0].clientX - rect.left) / rect.width,
+    //         (e.changedTouches[0].clientY - rect.top) / rect.height,
+    //       ]
+    //       pointer.fromArray(array)
+    //       // Get intersects
+    //       mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+    //       raycaster.setFromCamera(mouse, camera)
+    //       const intersects = raycaster.intersectObjects(scene.children)
+    //       textureRef.current.needsUpdate = true
 
-    if (isMobileVersion) {
-      document
-        .getElementsByTagName('canvas')[0]
-        .addEventListener('touchstart', (e) => {
-          const rect = canvasRenderedRef.current.getBoundingClientRect()
-          const array = [
-            (e.changedTouches[0].clientX - rect.left) / rect.width,
-            (e.changedTouches[0].clientY - rect.top) / rect.height,
-          ]
-          pointer.fromArray(array)
-          // Get intersects
-          mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
-          raycaster.setFromCamera(mouse, camera)
-          const intersects = raycaster.intersectObjects(scene.children)
-          textureRef.current.needsUpdate = true
+    //       if (intersects.length > 0 && intersects[0].uv) {
+    //         let uv = intersects[0].uv
+    //         setRay(uv)
+    //         const positionOnScene = {
+    //           x: Math.round(uv.x * 1024) - 4.5,
+    //           y: Math.round(uv.y * 1024) - 5.5,
+    //         }
 
-          if (intersects.length > 0 && intersects[0].uv) {
-            let uv = intersects[0].uv
-            setRay(uv)
-            const positionOnScene = {
-              x: Math.round(uv.x * 1024) - 4.5,
-              y: Math.round(uv.y * 1024) - 5.5,
-            }
+    //         const canvasRect = canvasRef.current.getCenter()
+    //         const simEvt = new globalThis.MouseEvent(e.type, {
+    //           clientX: canvasRect.left + positionOnScene.x,
+    //           clientY: canvasRect.top + positionOnScene.y,
+    //         })
 
-            const canvasRect = canvasRef.current.getCenter()
-            const simEvt = new globalThis.MouseEvent(e.type, {
-              clientX: canvasRect.left + positionOnScene.x,
-              clientY: canvasRect.top + positionOnScene.y,
-            })
-
-            canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-          }
-          return
-        })
-    }
-    if (!isMobileVersion) {
-      document
-        .getElementsByTagName('canvas')[0]
-        .addEventListener('mousedown', handleClick)
-    }
+    //         canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+    //       }
+    //       return
+    //     })
+    // }
 
     canvasRef.current.on('mouse:down', (e: any) => {
       setActiveText(canvasRef.current.getObjects().indexOf(e.target))
@@ -227,151 +268,6 @@ const ShirtComponent = ({
       }
     })
   })
-
-  const getPosition = (e) => {
-    const rect = canvasRenderedRef.current.getBoundingClientRect()
-    const array = [
-      (e.clientX - rect.left) / rect.width,
-      (e.clientY - rect.top) / rect.height,
-    ]
-    pointer.fromArray(array)
-    // Get intersects
-    mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
-    raycaster.setFromCamera(mouse, camera)
-    const intersects = raycaster.intersectObjects(scene.children)
-    textureRef.current.needsUpdate = true
-
-    if (intersects.length > 0 && intersects[0].uv) {
-      let uv = intersects[0].uv
-      setRay(uv)
-      return {
-        x: Math.round(uv.x * 2048) - 4.5,
-        y: Math.round(uv.y * 2048) - 5.5,
-      }
-    }
-    return null
-  }
-
-  const initPatch = () => {
-    fabric.Object.prototype.transparentCorners = false
-    fabric.Object.prototype.cornerColor = 'blue'
-    fabric.Object.prototype.cornerStyle = 'circle'
-    if (width < 800) {
-      fabric.Object.prototype.cornerSize = 20
-    } else {
-      fabric.Object.prototype.cornerSize = 18
-    }
-    // fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
-    // let simEvt
-    // let pointer
-    // let bounds
-    // let boundsWidth
-    // let boundsHeight = null
-    // let cssScale = null
-    // let upperCanvasEl = canvasRef.current.getSelectionElement()
-    // if (isMobileVersion) {
-    //   simEvt = new MouseEvent(
-    //     {
-    //       touchstart: 'mousedown',
-    //       touchmove: 'mousemove',
-    //       touchend: 'mouseup',
-    //     }[e.type],
-    //     {
-    //       bubbles: true,
-    //       cancelable: true,
-    //       view: window,
-    //       detail: 1,
-    //       screenX: Math.round(e.changedTouches[0].screenX),
-    //       screenY: Math.round(e.changedTouches[0].screenY),
-    //       clientX: Math.round(e.changedTouches[0].clientX),
-    //       clientY: Math.round(e.changedTouches[0].clientY),
-    //       ctrlKey: false,
-    //       altKey: false,
-    //       shiftKey: false,
-    //       metaKey: false,
-    //       button: 0,
-    //       relatedTarget: null,
-    //     }
-    //   )
-    //   pointer = fabric.util.getPointer(
-    //     simEvt,
-    //     canvasRef.current.getSelectionElement()
-    //   )
-    //     bounds = upperCanvasEl.getBoundingClientRect()
-    //     boundsWidth = bounds.width || 0
-    //     boundsHeight = bounds.height || 0
-    // } else {
-    //   pointer = fabric.util.getPointer(
-    //     e,
-    //     canvasRef.current.getSelectionElement()
-    //   )
-    //     bounds = upperCanvasEl.getBoundingClientRect()
-    //     boundsWidth = bounds.width || 0
-    //     boundsHeight = bounds.height || 0
-    // }
-    // if (!boundsWidth || !boundsHeight) {
-    //   if ('top' in bounds && 'bottom' in bounds) {
-    //     boundsHeight = Math.abs(bounds.top - bounds.bottom)
-    //   }
-    //   if ('right' in bounds && 'left' in bounds) {
-    //     boundsWidth = Math.abs(bounds.right - bounds.left)
-    //   }
-    // }
-    // canvasRef.current.calcOffset()
-    // pointer.x = Math.round(pointer.x) - canvasRef.current.getCenter().left
-    // pointer.y = Math.round(pointer.y) - canvasRef.current.getCenter().top
-    // /* BEGIN PATCH CODE */
-    // if (e.target !== canvasRef.current.getSelectionElement()) {
-    //   var positionOnScene
-    //   if (width < 800) {
-    //     positionOnScene = getPosition(simEvt)
-    //     if (positionOnScene) {
-    //       // console.log(simEvt.type);
-    //       pointer.x = positionOnScene.x
-    //       pointer.y = positionOnScene.y
-    //     }
-    //   } else {
-    //     positionOnScene = getPosition(e)
-
-    //     if (positionOnScene) {
-    //       // console.log(e.type);
-    //       pointer.x = positionOnScene.x
-    //       pointer.y = positionOnScene.y
-    //     }
-    //   }
-    // }
-    // /* END PATCH CODE */
-    // if (!ignoreZoom) {
-    //   pointer = canvasRef.current.restorePointerVpt(pointer)
-    // }
-
-    // if (boundsWidth === 0 || boundsHeight === 0) {
-    //   cssScale = { width: 1, height: 1 }
-    // } else {
-    //   cssScale = {
-    //     width: upperCanvasEl.width / boundsWidth,
-    //     height: upperCanvasEl.height / boundsHeight,
-    //   }
-    // }
-
-    //   return {
-    //     x: pointer.x * cssScale.width,
-    //     y: pointer.y * cssScale.height,
-    //   }
-    // }
-  }
-  const handleClick = (e) => {
-    const positionOnScene = getPosition(e)
-    if (positionOnScene) {
-      const canvasRect = canvasRef.current.getCenter()
-      const simEvt = new globalThis.MouseEvent(e.type, {
-        clientX: canvasRect.left + positionOnScene.x,
-        clientY: canvasRect.top + positionOnScene.y,
-      })
-
-      canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-    }
-  }
 
   useFrame((state, delta) => {
     controlsRef.current.update()
@@ -422,15 +318,7 @@ const ShirtComponent = ({
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
     <>
-      <group
-        ref={groupRef}
-        dispose={null}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        onPointerDown={() => setClicked(true)}
-        onPointerUp={() => setClicked(false)}
-        {...props}
-      >
+      <group ref={groupRef} dispose={null} {...props}>
         <mesh
           geometry={nodes.M740158_mesh_in.geometry}
           material={materials['Material.016']}

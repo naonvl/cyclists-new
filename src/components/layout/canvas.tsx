@@ -5,6 +5,9 @@ import {
   useState,
   FC,
   useRef,
+  useCallback,
+  useEffect,
+  useMemo,
 } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
@@ -35,6 +38,9 @@ const LCanvas: FC<CanvasProps> = ({
 }) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
   const isMobileVersion = useStore((state) => state.isMobileVersion)
+  const editText = useStore((state) => state.editText)
+  const isAddText = useStore((state) => state.isAddText)
+  const dimensions = useStore((state) => state.dimensions)
   const [threeProps, setThreeProps] = useState({
     camera: null,
     pointer: null,
@@ -43,6 +49,26 @@ const LCanvas: FC<CanvasProps> = ({
     mouse: null,
     gl: null,
   })
+  const memoizedInitPatch = useMemo(() => {
+    initPatch(
+      threeProps,
+      canvasRef,
+      canvasRenderedRef,
+      textureRef,
+      setRay,
+      editText,
+      isAddText,
+      dimensions
+    )
+  }, [
+    canvasRef,
+    dimensions,
+    editText,
+    isAddText,
+    setRay,
+    textureRef,
+    threeProps,
+  ])
 
   return (
     <Canvas
@@ -53,7 +79,7 @@ const LCanvas: FC<CanvasProps> = ({
       style={style}
       gl={{ preserveDrawingBuffer: true }}
       onClick={onClick}
-      onTouchStart={(e) => {
+      onTouchStart={(e) =>
         initMobilePatch(
           e,
           threeProps,
@@ -62,27 +88,10 @@ const LCanvas: FC<CanvasProps> = ({
           textureRef,
           setRay
         )
-      }}
+      }
       onMouseDown={(e) => {
         if (!isMobileVersion) {
-          initPatch(
-            threeProps,
-            canvasRef,
-            canvasRenderedRef,
-            textureRef,
-            setRay
-          )
-        }
-
-        if (isMobileVersion) {
-          initMobilePatch(
-            e,
-            threeProps,
-            canvasRef,
-            canvasRenderedRef,
-            textureRef,
-            setRay
-          )
+          memoizedInitPatch
         }
       }}
       onCreated={({ camera, pointer, scene, raycaster, gl, mouse }) =>
@@ -101,9 +110,8 @@ const LCanvas: FC<CanvasProps> = ({
         />
         <ambientLight intensity={0.4} />
         <Environment preset='city' />
-        <Preload all />
-        {/* {isLoading ? <Loader /> : children} */}
         {children}
+        <Preload all />
       </Suspense>
     </Canvas>
   )
