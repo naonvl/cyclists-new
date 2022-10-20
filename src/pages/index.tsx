@@ -1121,12 +1121,12 @@ Page.r3f = ({ canvasRef, textureRef, setRay, setActiveText, setEditText }) => (
   </>
 )
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async (ctx) => {
   return {
     props: {
       title:
         'Cyclists | Jersey Customiser. Your jersey just the way you want it.',
-      useId: 12345678,
+      userId: ctx.params.id,
     },
   }
 }
