@@ -1126,7 +1126,7 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     props: {
       title:
         'Cyclists | Jersey Customiser. Your jersey just the way you want it.',
-      userId: ctx.params.id,
+      userId: 321321,
     },
   }
 }
