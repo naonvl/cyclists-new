@@ -12,22 +12,15 @@ import Image from '@/components/dom/Image'
 interface DropdownsProps {
   rootClass?: string
   menuClass?: string
-  zoomInClick?: () => void
-  zoomOutClick?: () => void
-  rotateRightClick?: () => void
-  rotateLeftClick?: () => void
 }
 
 const DropdownControls: React.FC<DropdownsProps> = ({
   rootClass,
   menuClass,
-  zoomInClick,
-  zoomOutClick,
-  rotateRightClick,
-  rotateLeftClick,
 }) => {
   const buttonRef = useRef(null)
-  const zoom = useStore((state) => state.zoom)
+  const zoomCamera = useStore((state) => state.zoomCamera)
+  const rotateControl = useStore((state) => state.rotateControl)
   const [open, setOpen] = useState<boolean>(true)
 
   const rootClasses = cn(
@@ -76,16 +69,14 @@ const DropdownControls: React.FC<DropdownsProps> = ({
             <button
               type='button'
               className='flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
-              onClick={zoomInClick}
-              // disabled={zoom < 20 ? true : false}
+              onClick={zoomCamera('in')}
             >
               <ZoomInIcon className={cn('w-5 h-5')} />
             </button>
             <button
               type='button'
               className='flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
-              onClick={zoomOutClick}
-              disabled={zoom > 88 ? true : false}
+              onClick={zoomCamera('out')}
             >
               <ZoomOutIcon className={cn('w-5 h-5')} />
             </button>
@@ -94,7 +85,7 @@ const DropdownControls: React.FC<DropdownsProps> = ({
               className={cn(
                 'flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
               )}
-              onClick={rotateRightClick}
+              onClick={rotateControl('toRight')}
             >
               <Image
                 alt='Cyclists'
@@ -111,7 +102,7 @@ const DropdownControls: React.FC<DropdownsProps> = ({
               className={cn(
                 'flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
               )}
-              onClick={rotateLeftClick}
+              onClick={rotateControl('toLeft')}
             >
               <Image
                 alt='Cyclists'

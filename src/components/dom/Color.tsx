@@ -20,11 +20,11 @@ const Color: React.FC<SketchPickerProps> = ({ color, setCurrentColor }) => {
   const [currentColor, setColor] = useState('')
   let { styles, attributes } = usePopper(referenceElement, popperElement)
 
-  useEffect(() => {
-    if (!currentColor) {
-      setColor(color)
-    }
-  }, [color, currentColor, setColor])
+  // useEffect(() => {
+  //   if (!currentColor) {
+  //     setColor(color)
+  //   }
+  // }, [color, currentColor, setColor])
 
   const handleChange = (color: string) => {
     setCurrentColor(color)

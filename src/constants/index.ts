@@ -290,3 +290,20 @@ export const colorPallete = {
     },
   ],
 }
+
+export const fonts = [
+  'Arial',
+  'Arial Black',
+  'Comic Sans MS',
+  'Courier',
+  'Didot',
+  'Georgia',
+  'Helvetica',
+  'Impact',
+  'Lucida Console',
+  'MMA-Champ',
+  'Tahoma',
+  'Times New Roman',
+  'Trebuchet MS',
+  'Verdana ',
+]

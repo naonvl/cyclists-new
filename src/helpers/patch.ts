@@ -1,6 +1,6 @@
 import { MutableRefObject, useCallback } from 'react'
 import { fabric } from 'fabric'
-import { Texture } from 'three/src/textures/Texture'
+import { getState, setState } from '@/helpers/store'
 
 export const initPatch = (
   threeProps: {
@@ -11,16 +11,7 @@ export const initPatch = (
     mouse: any
     gl: any
   },
-  canvasRef: MutableRefObject<fabric.Canvas>,
-  canvasRenderedRef: MutableRefObject<HTMLCanvasElement>,
-  textureRef: MutableRefObject<Texture>,
-  setRay: any,
-  editText: boolean,
-  isAddText: boolean,
-  dimensions: {
-    width: number
-    height: number
-  }
+  canvasRenderedRef: MutableRefObject<HTMLCanvasElement>
 ) => {
   const { camera, pointer, scene, raycaster, mouse } = threeProps
   if (!camera || !pointer || !scene || !raycaster || !mouse) {
@@ -32,65 +23,72 @@ export const initPatch = (
   fabric.Object.prototype.cornerStyle = 'circle'
   fabric.Object.prototype.cornerSize = 18
 
-  if (editText || isAddText) {
-    fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
-      const upperCanvasEl = canvasRef.current.getSelectionElement()
-      const bounds = canvasRef.current
-        .getSelectionElement()
-        .getBoundingClientRect()
-      const boundsWidth = bounds.width || 0
-      const boundsHeight = bounds.height || 0
-      const pointerFabric = fabric.util.getPointer(
-        e,
-        canvasRef.current.getSelectionElement()
-      )
-      pointerFabric.x =
-        Math.round(pointerFabric.x) - canvasRef.current.getCenter().left
-      pointerFabric.y =
-        Math.round(pointerFabric.y) - canvasRef.current.getCenter().top
+  // if (editText || isAddText) {
+  fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
+    const upperCanvasEl = getState().canvas.getSelectionElement()
+    const bounds = getState()
+      .canvas.getSelectionElement()
+      .getBoundingClientRect()
+    const boundsWidth = bounds.width || 0
+    const boundsHeight = bounds.height || 0
+    const pointerFabric = fabric.util.getPointer(
+      e,
+      getState().canvas.getSelectionElement()
+    )
+    pointerFabric.x =
+      Math.round(pointerFabric.x) - getState().canvas.getCenter().left
+    pointerFabric.y =
+      Math.round(pointerFabric.y) - getState().canvas.getCenter().top
 
-      // /* BEGIN PATCH CODE */
-      if (e.target !== canvasRef.current.getSelectionElement()) {
-        const rect = canvasRenderedRef.current.getBoundingClientRect()
-        const array = [
+    // /* BEGIN PATCH CODE */
+    if (e.target !== getState().canvas.getSelectionElement()) {
+      const rect = canvasRenderedRef.current.getBoundingClientRect()
+      let array = []
+      if (e.changedTouches) {
+        array = [
+          (e.changedTouches[0].clientX - rect.left) / rect.width,
+          (e.changedTouches[0].clientY - rect.top) / rect.height,
+        ]
+      } else {
+        array = [
           (e.clientX - rect.left) / rect.width,
           (e.clientY - rect.top) / rect.height,
         ]
-        pointer.fromArray(array)
-        // Get intersects
-        mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
-        raycaster.setFromCamera(mouse, camera)
-
-        const intersects = raycaster.intersectObjects(scene.children)
-        if (intersects.length > 0 && intersects[0].uv) {
-          let uv = intersects[0].uv
-          setRay(uv)
-
-          pointerFabric.x = Math.round(uv.x * dimensions.width) - 4.5
-          pointerFabric.y = Math.round(uv.y * dimensions.height) - 5.5
-        }
       }
+      pointer.fromArray(array)
+      // Get intersects
+      mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+      raycaster.setFromCamera(mouse, camera)
 
-      let cssScale = null
-      if (boundsWidth === 0 || boundsHeight === 0) {
-        cssScale = { width: 1, height: 1 }
-      } else {
-        cssScale = {
-          width: upperCanvasEl.width / boundsWidth,
-          height: upperCanvasEl.height / boundsHeight,
-        }
+      const intersects = raycaster.intersectObjects(scene.children)
+      if (intersects.length > 0 && intersects[0].uv) {
+        let uv = intersects[0].uv
+        setState({ ray: uv })
+        getState().updateTexture()
+
+        pointerFabric.x = Math.round(uv.x * getState().dimensions.width) - 4.5
+        pointerFabric.y = Math.round(uv.y * getState().dimensions.height) - 5.5
       }
-      textureRef.current.needsUpdate = true
-      return {
-        x: pointerFabric.x * cssScale.width,
-        y: pointerFabric.y * cssScale.height,
+    }
+
+    let cssScale = null
+    if (boundsWidth === 0 || boundsHeight === 0) {
+      cssScale = { width: 1, height: 1 }
+    } else {
+      cssScale = {
+        width: upperCanvasEl.width / boundsWidth,
+        height: upperCanvasEl.height / boundsHeight,
       }
+    }
+
+    return {
+      x: pointerFabric.x * cssScale.width,
+      y: pointerFabric.y * cssScale.height,
     }
   }
 }
 
 export const initMobilePatch = (
-  event: any,
   threeProps: {
     camera: any
     pointer: any
@@ -99,10 +97,7 @@ export const initMobilePatch = (
     mouse: any
     gl: any
   },
-  canvasRef: MutableRefObject<fabric.Canvas>,
-  canvasRenderedRef: MutableRefObject<HTMLCanvasElement>,
-  textureRef: MutableRefObject<Texture>,
-  setRay: any
+  canvasRenderedRef: MutableRefObject<HTMLCanvasElement>
 ) => {
   const { camera, pointer, scene, raycaster, mouse } = threeProps
   if (!camera || !pointer || !scene || !raycaster || !mouse) {
@@ -114,26 +109,24 @@ export const initMobilePatch = (
   fabric.Object.prototype.cornerStyle = 'circle'
   fabric.Object.prototype.cornerSize = 18
   fabric.Canvas.prototype.getPointer = (e, ignoreZoom) => {
-    const upperCanvasEl = canvasRef.current.getSelectionElement()
-    const bounds = canvasRef.current
-      .getSelectionElement()
+    const upperCanvasEl = getState().canvas.getSelectionElement()
+    const bounds = getState()
+      .canvas.getSelectionElement()
       .getBoundingClientRect()
     const boundsWidth = bounds.width || 0
     const boundsHeight = bounds.height || 0
     const pointerFabric = fabric.util.getPointer(
       e,
-      canvasRef.current.getSelectionElement()
+      getState().canvas.getSelectionElement()
     )
 
-    canvasRef.current.calcOffset()
     pointerFabric.x =
-      Math.round(pointerFabric.x) - canvasRef.current.getCenter().left
+      Math.round(pointerFabric.x) - getState().canvas.getCenter().left
     pointerFabric.y =
-      Math.round(pointerFabric.y) - canvasRef.current.getCenter().top
+      Math.round(pointerFabric.y) - getState().canvas.getCenter().top
 
     // /* BEGIN PATCH CODE */
-    if (e.target !== canvasRef.current.getSelectionElement()) {
-      scene.updateMatrixWorld()
+    if (e.target !== getState().canvas.getSelectionElement()) {
       const rect = canvasRenderedRef.current.getBoundingClientRect()
       const array = [
         (e.changedTouches[0].clientX - rect.left) / rect.width,
@@ -143,12 +136,11 @@ export const initMobilePatch = (
       // Get intersects
       mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
       raycaster.setFromCamera(mouse, camera)
-      const intersects = raycaster.intersectObjects(scene.children)
-      textureRef.current.needsUpdate = true
 
+      const intersects = raycaster.intersectObjects(scene.children)
       if (intersects.length > 0 && intersects[0].uv) {
         let uv = intersects[0].uv
-        setRay(uv)
+        setState({ ray: uv })
 
         pointerFabric.x = Math.round(uv.x * 1024) - 4.5
         pointerFabric.y = Math.round(uv.y * 1024) - 5.5

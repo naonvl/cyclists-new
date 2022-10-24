@@ -1,26 +1,22 @@
 import { fabric } from 'fabric'
-import { MutableRefObject } from 'react'
+import { getState, setState } from '@/helpers/store'
 
-interface AddTextProps {
-  text: string
-  fontSize: number
-  canvasRef: MutableRefObject<fabric.Canvas | null>
-  left: number
-  top: number
-}
-
-const addText = ({ text, fontSize, canvasRef, left, top }: AddTextProps) => {
-  const jerseyText = new fabric.IText(text, {
-    angle: 0,
-    fontSize: fontSize,
+const addText = ({
+  activeText,
+  ray,
+  dimensions,
+  canvas,
+  allText,
+  insertText,
+  camera,
+}) => {
+  console.log(activeText)
+  const jerseyText = new fabric.IText(insertText, {
+    ...activeText,
     textAlign: 'center',
     fontWeight: 'bold',
-    fontFamily: 'Arial',
-    fill: '#000000',
-    stroke: '#000000',
-    strokeWidth: 1,
-    left: left,
-    top: top,
+    left: ray.x * dimensions.width,
+    top: ray.y * dimensions.height,
     originX: 'center',
     originY: 'center',
     hasRotatingPoint: false,
@@ -29,7 +25,7 @@ const addText = ({ text, fontSize, canvasRef, left, top }: AddTextProps) => {
     centeredScaling: true,
   })
 
-  if (canvasRef.current) {
+  if (canvas) {
     jerseyText.setControlsVisibility({
       mt: false,
       mb: false,
@@ -37,10 +33,16 @@ const addText = ({ text, fontSize, canvasRef, left, top }: AddTextProps) => {
       mr: false,
       mtr: false,
     })
-    canvasRef.current.add(jerseyText)
-    canvasRef.current.setActiveObject(jerseyText)
-    canvasRef.current.renderAll()
-    return jerseyText
+    canvas.add(jerseyText)
+    canvas.setActiveObject(jerseyText)
+    canvas.renderAll()
+    setState({
+      allText: [...allText, insertText],
+      editText: true,
+      isAddText: false,
+    })
+    getState().updateTexture()
+    // getState().flipCamera(camera.position.z + 0.001)
   }
 }
 

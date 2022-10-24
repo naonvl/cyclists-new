@@ -6,6 +6,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(405).send('Method Not Allowed')
   }
 
+  const { tag, userId, quantity, name, variantID, attachment } = req.body
+  const date = new Date()
+
   try {
     const maillits =
       process.env.NODE_ENV == 'development'
@@ -20,15 +23,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       from: 'cyclists.developer@gmail.com',
       // to: receipent,
       to: maillits,
-      subject: `Custom Jersey ID: ${req.body.userId}`,
-      html: `<p><b>UserID</b>: ${req.body.userId}</p>
-      <p><b>Variant ID</b>: ${req.body.id}</p>
-      <p><b>Quantity</b>: ${req.body.quantity}</p>
-      <p>Created at: ${new Date().toString()}</p>`,
+      subject: `Custom Jersey (${tag})`,
+      html: `<p><b>UserID</b>: ${userId}</p>
+      <p><b>Name</b>: ${name}</p>
+      <p><b>Variant ID</b>: ${variantID}</p>
+      <p><b>Quantity</b>: ${quantity}</p>
+      <p><b>Tag</b>: ${tag}</p>
+      <p>Created at: ${date.toString()}</p>
+      <p><b>IMPORTANT: Place a <i>${tag}</i> to find the order on search column in Orders Table Shopify (If customer status is paid)</b></p>`,
       attachments: {
         // encoded string as an attachment
-        filename: `${req.body.userId}.svg`,
-        content: req.body.attachment,
+        filename: `${userId}_${date.getFullYear()}${date.getMonth()}${date.getDate()}.svg`,
+        content: attachment,
         encoding: 'base64',
       },
     })

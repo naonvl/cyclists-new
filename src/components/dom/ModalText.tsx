@@ -2,63 +2,54 @@ import {
   Fragment,
   Dispatch,
   SetStateAction,
-  useState,
   MutableRefObject,
-  useEffect,
+  ChangeEvent,
+  MouseEvent,
+  useRef,
 } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import CloseIcon from '@heroicons/react/24/outline/XMarkIcon'
 import Text from '@/components/dom/Text'
-import useStore from '@/helpers/store'
+import useStore, { getState, setState } from '@/helpers/store'
 
 interface ModalProps {
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
   cancelButtonRef: MutableRefObject<any>
-  setText: any
-  text: string
 }
 
-const ModalText = ({
-  open,
-  setOpen,
-  cancelButtonRef,
-  setText,
-  text,
-}: ModalProps) => {
-  const setIsAddText = useStore((state) => state.setIsAddText)
+const ModalText = ({ cancelButtonRef }: ModalProps) => {
+  const openTextModal = useStore((state) => state.openTextModal)
+  const insertText = useStore((state) => state.insertText)
+  const msgRef = useRef<string>('')
 
-  const [msg, setMsg] = useState('')
-
-  // useEffect(() => {
-  //   return () => {
-  //     setMsg('')
-  //     setText('')
-  //   }
-  // })
-
-  const handleChangeText = (e: any) => {
-    setText(e.target.value)
+  const handleChangeText = (e: ChangeEvent<HTMLInputElement>) => {
+    if (msgRef.current.length > 0) {
+      msgRef.current = ''
+    }
+    setState({ insertText: e.target.value })
   }
 
-  const handleInsert = (e: any) => {
+  const handleInsert = (
+    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
+  ) => {
     e.preventDefault()
 
-    if (text.length == 0 || !text) {
-      return setMsg('Sorry, you should enter text first')
+    if (insertText.length == 0) {
+      return (msgRef.current = 'Sorry, you should enter text first')
     }
 
-    setIsAddText(true)
-    setOpen(false)
+    console.log(getState().insertText)
+    setState({ openTextModal: false, isAddText: true })
   }
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={openTextModal} as={Fragment}>
       <Dialog
         as='div'
         className='relative z-[999]'
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={() => setState({ openTextModal: false })}
       >
         <Transition.Child
           as={Fragment}
@@ -98,8 +89,8 @@ const ModalText = ({
                           type='text'
                           placeholder='Enter text here'
                           className='w-full border-gray-400'
-                          name='customText'
-                          value={text}
+                          name='insertText'
+                          value={insertText}
                           onChange={handleChangeText}
                         />
                       </div>
@@ -108,7 +99,7 @@ const ModalText = ({
                 </div>
                 <div
                   className='absolute right-0 flex items-center justify-center flex-shrink-0 w-12 h-12 mt-1 mb-3 mr-3 rounded-full cursor-pointer -top-1 md:top-0 md:mb-0'
-                  onClick={() => setOpen(false)}
+                  onClick={() => setState({ openTextModal: false })}
                 >
                   <CloseIcon
                     className='w-6 h-6 text-black'
@@ -119,7 +110,7 @@ const ModalText = ({
                   <button
                     type='button'
                     className='inline-flex justify-center w-full px-4 py-2 ml-3 text-sm text-gray-500 uppercase bg-gray-200 border border-gray-400 shadow-sm hover:bg-gray-300 focus:outline-none '
-                    onClick={() => setOpen(false)}
+                    onClick={() => setState({ openTextModal: false })}
                   >
                     cancel
                   </button>
@@ -132,10 +123,10 @@ const ModalText = ({
                     insert
                   </button>
                 </div>
-                {msg.length > 0 ? (
+                {msgRef.current.length > 0 ? (
                   <div className='flex items-center justify-center w-full px-6 my-2'>
                     <Text className='text-sm text-center text-red-500'>
-                      {msg}
+                      {msgRef.current}
                     </Text>
                   </div>
                 ) : null}

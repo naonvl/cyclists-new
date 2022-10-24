@@ -1,46 +1,38 @@
 import {
   CSSProperties,
-  MutableRefObject,
   Suspense,
   useState,
   FC,
   useRef,
-  useCallback,
-  useEffect,
   useMemo,
+  useCallback,
+  MouseEvent,
 } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
-import useStore from '@/helpers/store'
+import useStore, { setState } from '@/helpers/store'
 import Loader from '@/components/canvas/Loader'
-import { initPatch, initMobilePatch } from '@/helpers/patch'
+import { initPatch } from '@/helpers/patch'
+import addText from '@/helpers/addText'
+import { getPositionPointer } from '@/helpers/getPositions'
 
 interface CanvasProps {
   children?: React.ReactNode
   style: CSSProperties
-  onClick?: () => void
-  canvasRef: MutableRefObject<fabric.Canvas>
   width: number
   props?: React.RefAttributes<HTMLCanvasElement>
-  setRay: any
-  textureRef: MutableRefObject<THREE.Texture>
 }
 
-const LCanvas: FC<CanvasProps> = ({
-  children,
-  style,
-  onClick,
-  canvasRef,
-  width,
-  setRay,
-  textureRef,
-  ...props
-}) => {
+const LCanvas: FC<CanvasProps> = ({ children, style, width, ...props }) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
-  const isMobileVersion = useStore((state) => state.isMobileVersion)
-  const editText = useStore((state) => state.editText)
   const isAddText = useStore((state) => state.isAddText)
+  const canvas = useStore((state) => state.canvas)
   const dimensions = useStore((state) => state.dimensions)
+  const activeText = useStore((state) => state.activeText)
+  const ray = useStore((state) => state.ray)
+  const allText = useStore((state) => state.allText)
+  const insertText = useStore((state) => state.insertText)
+  const camera = useStore((state) => state.camera)
   const [threeProps, setThreeProps] = useState({
     camera: null,
     pointer: null,
@@ -50,25 +42,67 @@ const LCanvas: FC<CanvasProps> = ({
     gl: null,
   })
   const memoizedInitPatch = useMemo(() => {
-    initPatch(
-      threeProps,
-      canvasRef,
-      canvasRenderedRef,
-      textureRef,
-      setRay,
-      editText,
-      isAddText,
-      dimensions
-    )
-  }, [
-    canvasRef,
-    dimensions,
-    editText,
-    isAddText,
-    setRay,
-    textureRef,
-    threeProps,
-  ])
+    initPatch(threeProps, canvasRenderedRef)
+  }, [threeProps])
+
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
+      const rect = canvasRenderedRef.current.getBoundingClientRect()
+      const array = [
+        (e.clientX - rect.left) / rect.width,
+        (e.clientY - rect.top) / rect.height,
+      ]
+      threeProps.pointer.fromArray(array)
+      // Get intersects
+      threeProps.mouse.set(
+        threeProps.pointer.x * 2 - 1,
+        -(threeProps.pointer.y * 2) + 1
+      )
+      threeProps.raycaster.setFromCamera(threeProps.mouse, threeProps.camera)
+      const intersects = threeProps.raycaster.intersectObjects(
+        threeProps.scene.children
+      )
+      // getState().updateTexture()
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        let uv = intersects[0].uv
+        setState({
+          ray: {
+            x: uv.x,
+            y: uv.y,
+            z: 0,
+          },
+        })
+        const positionOnScene = {
+          x: Math.round(uv.x * dimensions.width) - 4.5,
+          y: Math.round(uv.y * dimensions.height) - 5.5,
+        }
+
+        const canvasRect = canvas.getCenter()
+        // console.log(e.clientX, e.clientY)
+        // console.log({
+        //   clientX: canvasRect.left + positionOnScene.x,
+        //   clientY: canvasRect.top + positionOnScene.y,
+        // })
+        const simEvt = new globalThis.MouseEvent(e.type, {
+          clientX: canvasRect.left + positionOnScene.x,
+          clientY: canvasRect.top + positionOnScene.y,
+        })
+
+        canvas.getSelectionElement().dispatchEvent(simEvt)
+      }
+    },
+    [
+      canvas,
+      dimensions.height,
+      dimensions.width,
+      threeProps.camera,
+      threeProps.mouse,
+      threeProps.pointer,
+      threeProps.raycaster,
+      threeProps.scene,
+    ]
+  )
 
   return (
     <Canvas
@@ -78,25 +112,27 @@ const LCanvas: FC<CanvasProps> = ({
       camera={{ position: [0, 0, 500], fov: 30 }}
       style={style}
       gl={{ preserveDrawingBuffer: true }}
-      onClick={onClick}
-      onTouchStart={(e) =>
-        initMobilePatch(
-          e,
-          threeProps,
-          canvasRef,
-          canvasRenderedRef,
-          textureRef,
-          setRay
-        )
-      }
-      onMouseDown={(e) => {
-        if (!isMobileVersion) {
-          memoizedInitPatch
+      onClick={(e) => {
+        if (isAddText) {
+          addText({
+            activeText,
+            ray,
+            dimensions,
+            canvas,
+            allText,
+            insertText,
+            camera: threeProps.camera,
+          })
         }
       }}
-      onCreated={({ camera, pointer, scene, raycaster, gl, mouse }) =>
+      // onTouchStart={() => memoizedInitPatch}
+      onMouseDown={(e) => {
+        memoizedInitPatch
+        handleClick(e)
+      }}
+      onCreated={({ camera, pointer, scene, raycaster, gl, mouse }) => {
         setThreeProps({ camera, pointer, scene, raycaster, gl, mouse })
-      }
+      }}
       id='rendered'
       {...props}
     >

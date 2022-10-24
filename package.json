@@ -23,6 +23,7 @@
     "formidable": "^2.0.1",
     "fs": "^0.0.1-security",
     "glsl-random": "^0.0.5",
+    "immer": "^9.0.15",
     "next": "^12.3.1",
     "next-images": "^1.8.4",
     "next-pwa": "^5.6.0",

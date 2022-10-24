@@ -17,11 +17,11 @@ const ColorPicker: React.FC<SketchPickerProps> = ({
     color: '',
   })
 
-  useEffect(() => {
-    if (!state.color) {
-      setState({ ...state, color: color })
-    }
-  }, [color, state])
+  // useEffect(() => {
+  //   if (!state.color) {
+  //     setState({ ...state, color: color })
+  //   }
+  // }, [color, state])
 
   const handleClick = () => {
     return setState({
