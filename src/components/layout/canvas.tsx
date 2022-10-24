@@ -10,11 +10,12 @@ import {
 } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
-import useStore, { setState } from '@/helpers/store'
+import useStore, { setState, getState } from '@/helpers/store'
 import Loader from '@/components/canvas/Loader'
 import { initPatch } from '@/helpers/patch'
 import addText from '@/helpers/addText'
 import { getPositionPointer } from '@/helpers/getPositions'
+import shallow from 'zustand/shallow'
 
 interface CanvasProps {
   children?: React.ReactNode
@@ -25,14 +26,25 @@ interface CanvasProps {
 
 const LCanvas: FC<CanvasProps> = ({ children, style, width, ...props }) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
-  const isAddText = useStore((state) => state.isAddText)
-  const canvas = useStore((state) => state.canvas)
-  const dimensions = useStore((state) => state.dimensions)
-  const activeText = useStore((state) => state.activeText)
-  const ray = useStore((state) => state.ray)
-  const allText = useStore((state) => state.allText)
-  const insertText = useStore((state) => state.insertText)
-  const camera = useStore((state) => state.camera)
+  const {
+    isAddText,
+    canvas,
+    dimensions,
+    activeText,
+    ray,
+    allText,
+    inserText,
+    camera,
+  } = useStore((state) => ({
+    isAddText: state.isAddText,
+    canvas: state.canvas,
+    dimensions: state.dimensions,
+    activeText: state.activeText,
+    ray: state.ray,
+    allText: state.allText,
+    insertText: state.insertText,
+    camera: state.camera,
+  }))
   const [threeProps, setThreeProps] = useState({
     camera: null,
     pointer: null,
@@ -114,15 +126,8 @@ const LCanvas: FC<CanvasProps> = ({ children, style, width, ...props }) => {
       gl={{ preserveDrawingBuffer: true }}
       onClick={(e) => {
         if (isAddText) {
-          addText({
-            activeText,
-            ray,
-            dimensions,
-            canvas,
-            allText,
-            insertText,
-            camera: threeProps.camera,
-          })
+          console.log(activeText)
+          addText()
         }
       }}
       // onTouchStart={() => memoizedInitPatch}

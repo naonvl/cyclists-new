@@ -1,5 +1,5 @@
 import cn from 'clsx'
-import { ChangeEvent, MutableRefObject } from 'react'
+import { ChangeEvent } from 'react'
 import Dropdowns from '@/components/dom/Dropdowns'
 import useStore, { setState, getState } from '@/helpers/store'
 import { fonts } from '@/constants'
@@ -7,6 +7,7 @@ import { fonts } from '@/constants'
 const AddTextContent = () => {
   const editText = useStore((state) => state.editText)
   const allText = useStore((state) => state.allText)
+  const activeText = useStore((state) => state.activeText)
   const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
   const handleCloseActiveText = () => {
     getState().resetActiveText()
@@ -15,12 +16,22 @@ const AddTextContent = () => {
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
   ) => {
     getState().canvas.getActiveObject().set<any>(e.target.name, e.target.value)
+
+    if (e.target.name == 'text') {
+      let newAllText = [...getState().allText]
+      newAllText[getState().indexActiveText - 1] = e.target.value
+      setState({
+        allText: newAllText,
+      })
+    }
+
     setState({
       activeText: {
         ...getState().activeText,
         [e.target.name]: e.target.value,
       },
     })
+    getState().updateTexture()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
@@ -36,6 +47,7 @@ const AddTextContent = () => {
       },
       textChanged: true,
     })
+    getState().updateTexture()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
@@ -51,11 +63,12 @@ const AddTextContent = () => {
       },
       textChanged: true,
     })
+    getState().updateTexture()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   const { text, fontFamily, fill, fontSize, angle, stroke, strokeWidth } =
-    getState().activeText
+    activeText
 
   return (
     <Dropdowns
@@ -111,6 +124,7 @@ const AddTextContent = () => {
                           getState().canvas._iTextInstances[index]
                         )
                         setState({
+                          indexActiveText: index + 1,
                           activeText: getState().canvas.getActiveObject(),
                           editText: true,
                         })
@@ -160,11 +174,10 @@ const AddTextContent = () => {
               <div className='w-full p-3 border-b border-gray-500 border-solid'>
                 <label htmlFor='changeText'>Text</label>
                 <input
-                  id='changeText'
                   type='text'
-                  name='text'
                   placeholder='Enter text here'
                   className='w-full border-gray-400'
+                  name='text'
                   value={text}
                   onChange={handleChangeTextData}
                 />
@@ -203,6 +216,7 @@ const AddTextContent = () => {
                     <input
                       id='inputFontSize'
                       hidden
+                      readOnly
                       type='number'
                       name='fontSize'
                       value={fontSize}
@@ -228,6 +242,7 @@ const AddTextContent = () => {
                   <input
                     id='inputAngle'
                     hidden
+                    readOnly
                     type='number'
                     name='angle'
                     value={angle}
@@ -262,8 +277,9 @@ const AddTextContent = () => {
                   <input
                     id='inputStrokeWidth'
                     hidden
+                    readOnly
                     type='number'
-                    name='strokWidth'
+                    name='strokeWidth'
                     value={strokeWidth}
                   />
                   <button
@@ -275,13 +291,13 @@ const AddTextContent = () => {
                         ['bg-[#F6F6F6] border-[#D4D4D4]']: strokeWidth > 0,
                       }
                     )}
-                    onClick={() => handleDecrement('strokWidth')}
+                    onClick={() => handleDecrement('strokeWidth')}
                   >
                     -
                   </button>
                   <button
                     className='py-0 border border-solid border-[#D4D4D4] m-[3px] bg-[#F6F6F6] px-[20px]'
-                    onClick={() => handleIncrement('strokWidth')}
+                    onClick={() => handleIncrement('strokeWidth')}
                   >
                     +
                   </button>

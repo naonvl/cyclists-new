@@ -6,6 +6,7 @@ import {
   ChangeEvent,
   MouseEvent,
   useRef,
+  useState,
 } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import CloseIcon from '@heroicons/react/24/outline/XMarkIcon'
@@ -21,11 +22,13 @@ interface ModalProps {
 const ModalText = ({ cancelButtonRef }: ModalProps) => {
   const openTextModal = useStore((state) => state.openTextModal)
   const insertText = useStore((state) => state.insertText)
-  const msgRef = useRef<string>('')
+  const changeActiveText = useStore((state) => state.changeActiveText)
+  const isMobileVersion = useStore((state) => state.isMobileVersion)
+  const [msg, setMsg] = useState<string>('')
 
   const handleChangeText = (e: ChangeEvent<HTMLInputElement>) => {
-    if (msgRef.current.length > 0) {
-      msgRef.current = ''
+    if (msg.length > 0) {
+      setMsg('')
     }
     setState({ insertText: e.target.value })
   }
@@ -33,14 +36,23 @@ const ModalText = ({ cancelButtonRef }: ModalProps) => {
   const handleInsert = (
     e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
   ) => {
-    e.preventDefault()
-
     if (insertText.length == 0) {
-      return (msgRef.current = 'Sorry, you should enter text first')
+      return setMsg('Sorry, you should enter text first')
     }
 
-    console.log(getState().insertText)
-    setState({ openTextModal: false, isAddText: true })
+    changeActiveText({
+      fontSize: isMobileVersion ? 30 : 40,
+      text: insertText,
+    })
+    setState({
+      openTextModal: false,
+      isAddText: true,
+    })
+  }
+
+  const handleClose = () => {
+    setMsg('')
+    setState({ openTextModal: false, insertText: '' })
   }
 
   return (
@@ -49,7 +61,7 @@ const ModalText = ({ cancelButtonRef }: ModalProps) => {
         as='div'
         className='relative z-[999]'
         initialFocus={cancelButtonRef}
-        onClose={() => setState({ openTextModal: false })}
+        onClose={handleClose}
       >
         <Transition.Child
           as={Fragment}
@@ -99,7 +111,7 @@ const ModalText = ({ cancelButtonRef }: ModalProps) => {
                 </div>
                 <div
                   className='absolute right-0 flex items-center justify-center flex-shrink-0 w-12 h-12 mt-1 mb-3 mr-3 rounded-full cursor-pointer -top-1 md:top-0 md:mb-0'
-                  onClick={() => setState({ openTextModal: false })}
+                  onClick={handleClose}
                 >
                   <CloseIcon
                     className='w-6 h-6 text-black'
@@ -110,7 +122,7 @@ const ModalText = ({ cancelButtonRef }: ModalProps) => {
                   <button
                     type='button'
                     className='inline-flex justify-center w-full px-4 py-2 ml-3 text-sm text-gray-500 uppercase bg-gray-200 border border-gray-400 shadow-sm hover:bg-gray-300 focus:outline-none '
-                    onClick={() => setState({ openTextModal: false })}
+                    onClick={handleClose}
                   >
                     cancel
                   </button>
@@ -123,10 +135,10 @@ const ModalText = ({ cancelButtonRef }: ModalProps) => {
                     insert
                   </button>
                 </div>
-                {msgRef.current.length > 0 ? (
+                {msg.length > 0 ? (
                   <div className='flex items-center justify-center w-full px-6 my-2'>
                     <Text className='text-sm text-center text-red-500'>
-                      {msgRef.current}
+                      {msg}
                     </Text>
                   </div>
                 ) : null}

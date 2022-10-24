@@ -67,12 +67,23 @@ interface State {
   zoomCamera: (param: 'in' | 'out') => void
   rotateControl: (param: 'toRight' | 'toLeft') => void
   updateTexture: () => void
+  changeActiveText: (param: {
+    text: string
+    fontFamily: string
+    fill: string
+    fontSize: number
+    angle: number
+    stroke: string
+    strokeWidth: number
+  }) => void
   quantity: number
   price: number
   isAddText: boolean
+  indexActiveText: number
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
+  indexActiveText: 0,
   isAddText: false,
   canvas: null,
   group: null,
@@ -97,6 +108,13 @@ const useStoreImpl = create<State>()((set, get) => ({
     stroke: '#000000',
     strokeWidth: 0,
   },
+  changeActiveText: (param) =>
+    set(() => ({
+      activeText: {
+        ...get().activeText,
+        param,
+      },
+    })),
   ray: {
     x: 1,
     y: 1,

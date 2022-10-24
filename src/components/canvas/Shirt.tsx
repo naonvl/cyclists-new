@@ -122,36 +122,6 @@ const ShirtComponent = ({ props }: ShirtProps) => {
       subscribe((state) => {
         canvasRef.current = state.canvas
         textureRef.current = state.texture
-        // canvasRef.current.on('mouse:down', (e: any) => {
-        //   const indexActiveObject = canvasRef.current
-        //     .getObjects()
-        //     .indexOf(e.target)
-
-        //   if (
-        //     state.canvas._iTextInstances &&
-        //     state.canvas._iTextInstances.length > 0
-        //   ) {
-        //     state.canvas.setActiveObject(
-        //       state.canvas._iTextInstances[indexActiveObject]
-        //     )
-        //   }
-
-        //   if (e.target && e.target.text) {
-        //     state.activeText = state.canvas.getActiveObject()
-        //     state.editText = true
-        //     // setState({
-        //     //   activeText: state.canvas.getActiveObject(),
-        //     //   editText: true,
-        //     // })
-        //     controlsRef.current.enabled = false
-        //   } else {
-        //     setState({
-        //       editText: false,
-        //     })
-        //     state.resetActiveText()
-        //     controlsRef.current.enabled = true
-        //   }
-        // })
       }),
     []
   )
@@ -161,13 +131,13 @@ const ShirtComponent = ({ props }: ShirtProps) => {
   // }, [camera])
 
   useEffect(() => {
-    if (canvasRef.current) {
-      textureRef.current = new Texture(canvasRef.current.getElement())
-      // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-      textureRef.current.flipY = false
-      textureRef.current.needsUpdate = true
-      canvasRef.current.renderAll()
-    }
+    // if (canvasRef.current) {
+    //   textureRef.current = new Texture(canvasRef.current.getElement())
+    //   // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
+    //   textureRef.current.flipY = false
+    //   textureRef.current.needsUpdate = true
+    //   canvasRef.current.renderAll()
+    // }
     // if (textureChanged && isLoading) {
     //   setIsLoading(false)
     //   setTextureChanged(false)
@@ -183,6 +153,38 @@ const ShirtComponent = ({ props }: ShirtProps) => {
     // if (textChanged) {
     //   setTextChanged(false)
     // }
+    canvasRef.current.on('mouse:down', (e: any) => {
+      const indexObject = canvasRef.current.getObjects().indexOf(e.target)
+      const activeObject = canvasRef.current.getActiveObject()
+
+      // if (
+      //   getState().canvas._iTextInstances &&
+      //   getState().canvas._iTextInstances.length > 0
+      // ) {
+      //   getState().canvas.sete
+      //   getState().canvas.setActiveObject(
+      //     getState().canvas._iTextInstances[indexActiveObject]
+      //   )
+      // }
+
+      if (e.target && e.target.text) {
+        // state.activeText = state.canvas.getActiveObject()
+        // state.editText = true
+        setState({
+          indexActiveText: indexObject,
+          activeText: activeObject,
+          editText: true,
+        })
+        controlsRef.current.enabled = false
+      } else {
+        setState({
+          editText: false,
+          indexActiveText: 0,
+        })
+        // getState().resetActiveText()
+        controlsRef.current.enabled = true
+      }
+    })
   }, [])
 
   // useFrame(() => {
