@@ -40,7 +40,6 @@ const addText = () => {
       isAddText: false,
     })
     getState().updateTexture()
-    console.log(getState().canvas)
     // getState().flipCamera(camera.position.z + 0.001)
   }
 }

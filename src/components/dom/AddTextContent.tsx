@@ -3,6 +3,7 @@ import { ChangeEvent } from 'react'
 import Dropdowns from '@/components/dom/Dropdowns'
 import useStore, { setState, getState } from '@/helpers/store'
 import { fonts } from '@/constants'
+import { fabricControls } from '@/util/fabric'
 
 const AddTextContent = () => {
   const editText = useStore((state) => state.editText)
@@ -10,7 +11,9 @@ const AddTextContent = () => {
   const activeText = useStore((state) => state.activeText)
   const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
   const handleCloseActiveText = () => {
+    getState().canvas.discardActiveObject()
     getState().resetActiveText()
+    getState().updateTexture()
   }
   const handleChangeTextData = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
@@ -128,6 +131,8 @@ const AddTextContent = () => {
                           activeText: getState().canvas.getActiveObject(),
                           editText: true,
                         })
+                        fabricControls()
+                        getState().updateTexture()
                       }}
                     >
                       edit

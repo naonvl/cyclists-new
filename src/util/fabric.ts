@@ -99,3 +99,10 @@ export const initFabricCanvas = ({
 
   return fabricCanvas
 }
+
+export const fabricControls = () => {
+  fabric.Object.prototype.transparentCorners = false
+  fabric.Object.prototype.cornerColor = 'blue'
+  fabric.Object.prototype.cornerStyle = 'circle'
+  fabric.Object.prototype.cornerSize = 18
+}

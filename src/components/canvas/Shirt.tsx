@@ -181,6 +181,7 @@ const ShirtComponent = ({ props }: ShirtProps) => {
           editText: false,
           indexActiveText: 0,
         })
+        getState().canvas.discardActiveObject(e)
         // getState().resetActiveText()
         controlsRef.current.enabled = true
       }
