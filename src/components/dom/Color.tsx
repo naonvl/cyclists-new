@@ -13,22 +13,15 @@ interface SketchPickerProps {
 }
 
 const Color: React.FC<SketchPickerProps> = ({ color, setCurrentColor }) => {
-  const colors = useStore((state) => state.colors)
   const [referenceElement, setReferenceElement] = useState<HTMLButtonElement>()
   const [popperElement, setPopperElement] = useState<HTMLDivElement>()
   const [pagination, setPagination] = useState(1)
-  const [currentColor, setColor] = useState('')
+  const [currentColor, setColor] = useState(color)
   let { styles, attributes } = usePopper(referenceElement, popperElement)
 
-  // useEffect(() => {
-  //   if (!currentColor) {
-  //     setColor(color)
-  //   }
-  // }, [color, currentColor, setColor])
-
-  const handleChange = (color: string) => {
-    setCurrentColor(color)
-    return setColor(color)
+  const handleChange = (e: string) => {
+    setCurrentColor(e)
+    return setColor(e)
   }
 
   const handlePrevPage = () => {

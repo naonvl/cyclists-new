@@ -3,6 +3,7 @@ import useStore, { getState, setState } from '@/helpers/store'
 
 const StepNavigation = () => {
   const dropdownStepOpen = useStore((state) => state.dropdownStepOpen)
+  const isLoading = useStore((state) => state.isLoading)
 
   const handlePrev = () => {
     if (dropdownStepOpen == 1) {
@@ -20,7 +21,12 @@ const StepNavigation = () => {
     setState({ dropdownStepOpen: dropdownStepOpen + 1 })
   }
 
-  return (
+  return isLoading ? (
+    <div className='flex justify-between'>
+      <div className={cn('animate-pulse bg-gray-300 w-[100px] h-[38px]')} />
+      <div className={cn('animate-pulse bg-gray-300 w-[100px] h-[38px]')} />
+    </div>
+  ) : (
     <div className='flex justify-between'>
       <button
         type='button'

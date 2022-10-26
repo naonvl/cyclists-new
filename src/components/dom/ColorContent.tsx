@@ -1,22 +1,37 @@
 import Dropdowns from '@/components/dom/Dropdowns'
 import Text from '@/components/dom/Text'
 import Color from '@/components/dom/Color'
-import useStore, { setState, getState } from '@/helpers/store'
+import useStore, { setState, getState, subscribe } from '@/helpers/store'
+import { useEffect } from 'react'
+import loadSvg from '@/helpers/loadSvg'
+import { Texture } from 'three/src/textures/Texture'
 
 const ColorContent = () => {
   const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
   const colors = useStore((state) => state.colors)
+  const canvas = useStore((state) => state.canvas)
+  const texture = useStore((state) => state.texture)
   const svgGroup = useStore((state) => state.svgGroup)
 
   const handleSetColor = (e: string, index: number) => {
-    let newArrColors = [...colors]
-    newArrColors[index].fill = e
+    // let newArrColors = [...getState().colors]
+    // newArrColors[index].fill = e
     svgGroup._objects[index].set('fill', e)
-    getState().canvas.add(svgGroup)
-    getState().canvas.sendToBack(svgGroup)
-    getState().canvas.renderAll()
-    setState({ svgGroup: svgGroup, colorChanged: true })
-    getState().flipCamera(getState().camera.position.z + 0.001)
+    getState().changeColor(index, e)
+    // console.log()
+    setState({
+      svgGroup: svgGroup,
+      colorChanged: true,
+    })
+    getState()
+      .canvas.remove(getState().canvas._objects[0])
+      .add(svgGroup)
+      .sendToBack(svgGroup)
+    // console.log(getState().canvas.el)
+    // getState().canvas.add(svgGroup)
+    // getState().canvas.sendToBack(svgGroup)
+    getState().updateTexture()
+    // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   return (
@@ -30,7 +45,7 @@ const ColorContent = () => {
       label='stepTwo'
     >
       <div className='px-2 grid grid-cols-3 gap-3'>
-        {colors.map((data, index) => (
+        {getState().colors.map((data, index) => (
           <div
             key={index}
             className='inline-flex flex-col items-center justify-between w-full'

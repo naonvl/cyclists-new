@@ -2,7 +2,7 @@ import cn from 'clsx'
 import Text from '@/components/dom/Text'
 import useStore, { setState } from '@/helpers/store'
 
-const contens = {
+const contents = {
   stepOne: {
     step: 'Step 1',
     title: 'choose your style',
@@ -19,8 +19,21 @@ const contens = {
 
 const StepControls = () => {
   const dropdownStepOpen = useStore((state) => state.dropdownStepOpen)
+  const isLoading = useStore((state) => state.isLoading)
 
-  return (
+  return isLoading ? (
+    <div className='flex justify-between overflow-hidden md:justify-between'>
+      {[0, 1, 2].map((_, index) => (
+        <div
+          className='inline-flex flex-col items-start cursor-pointer gap-1 animate-pulse'
+          key={index}
+        >
+          <div className='bg-gray-300 w-[95px] h-[20px]' />
+          <div className='bg-gray-300 w-[140px] h-[20px]' />
+        </div>
+      ))}
+    </div>
+  ) : (
     <div className='flex justify-between overflow-hidden md:justify-between'>
       <div
         className='inline-flex flex-col items-center cursor-pointer'
@@ -31,14 +44,14 @@ const StepControls = () => {
             ['text-pink-600']: dropdownStepOpen == 1,
           })}
         >
-          {contens.stepOne.step}
+          {contents.stepOne.step}
         </Text>
         <Text
           className={cn('text-xs uppercase', {
             ['text-pink-600']: dropdownStepOpen == 1,
           })}
         >
-          {contens.stepOne.title}
+          {contents.stepOne.title}
         </Text>
       </div>
       <div
@@ -50,14 +63,14 @@ const StepControls = () => {
             ['text-pink-600']: dropdownStepOpen == 2,
           })}
         >
-          {contens.stepTwo.step}
+          {contents.stepTwo.step}
         </Text>
         <Text
           className={cn('text-xs uppercase', {
             ['text-pink-600']: dropdownStepOpen == 2,
           })}
         >
-          {contens.stepTwo.title}
+          {contents.stepTwo.title}
         </Text>
       </div>
       <div
@@ -69,14 +82,14 @@ const StepControls = () => {
             ['text-pink-600']: dropdownStepOpen == 3,
           })}
         >
-          {contens.stepThree.step}
+          {contents.stepThree.step}
         </Text>
         <Text
           className={cn('text-xs uppercase', {
             ['text-pink-600']: dropdownStepOpen == 3,
           })}
         >
-          {contens.stepThree.title}
+          {contents.stepThree.title}
         </Text>
       </div>
     </div>

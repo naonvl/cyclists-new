@@ -17,6 +17,7 @@ interface InputNumberProps extends Omit<ComponentProps<'input'>, 'label'> {
   min?: number | undefined
   max?: number | undefined
   disabled?: boolean
+  rootClass?: string
 }
 
 const InputNumber = forwardRef<HTMLInputElement, InputNumberProps>(
@@ -35,6 +36,7 @@ const InputNumber = forwardRef<HTMLInputElement, InputNumberProps>(
       min,
       max,
       disabled,
+      rootClass,
       ...rest
     },
     ref
@@ -52,7 +54,8 @@ const InputNumber = forwardRef<HTMLInputElement, InputNumberProps>(
       },
       {
         ['border-red-500 text-red-500']: error,
-      }
+      },
+      rootClass
     )
 
     const labelClasses = cn(

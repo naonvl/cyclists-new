@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { MutableRefObject } from 'react'
 import { Texture } from 'three/src/textures/Texture'
-import { Canvas } from 'fabric/fabric-impl'
+import type { Canvas } from 'fabric/fabric-impl'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { getState, setState } from '@/helpers/store'
+import useStore, { getState, setState, subscribe } from '@/helpers/store'
 import { useRef, useEffect, useCallback } from 'react'
 import { getPositionPointer, getPositionTouch } from '@/helpers/getPositions'
 import useFirstRenderModel from '@/components/hooks/useFirstRenderModel'
-import { subscribe } from '@/helpers/store'
 import type { Group } from 'three/src/objects/Group'
+import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
 import FlipControls from '@/components/canvas/FlipControls'
 import {
   useGLTF,
@@ -36,22 +36,25 @@ type GLTFResult = GLTF & {
 }
 
 interface ShirtProps {
+  canvasRef: MutableRefObject<Canvas>
   props?: JSX.IntrinsicElements['group']
 }
 
-const ShirtComponent = ({ props }: ShirtProps) => {
+const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
   const { nodes, materials } = useGLTF(
     '/model/n-cycling-jersey.drc.glb'
   ) as unknown as GLTFResult
   const { camera, gl, pointer, mouse, raycaster, scene } = useThree()
+
   const groupRef = useRef<Group>(null)
-  const canvasRef = useRef<Canvas>(getState().canvas)
   const textureRef = useRef<Texture>(getState().texture) // default: null
   const controlsRef = useRef<OrbitControlsImpl>(null)
+  const materialRef = useRef<MeshStandardMaterial>(null)
   const canvasRenderedRef = useRef<HTMLCanvasElement>(
     document.getElementsByTagName('canvas')[0]
   )
   const inputRef = React.useRef(null)
+  const colorChanged = useStore((state) => state.colorChanged)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -112,18 +115,23 @@ const ShirtComponent = ({ props }: ShirtProps) => {
   useFirstRenderModel({
     // onClick: handleClick,
     // onTouch: handleTouch,
+    controlsRef,
+    groupRef,
     canvasRef,
     textureRef,
-    gl,
+    materialRef,
   })
 
   useEffect(
     () =>
-      subscribe((state) => {
+      subscribe((state, prevState) => {
         canvasRef.current = state.canvas
         textureRef.current = state.texture
+        controlsRef.current = state.controls
+        groupRef.current = state.group
+        materialRef.current = state.material
       }),
-    []
+    [canvasRef]
   )
 
   // useEffect(() => {
@@ -131,28 +139,6 @@ const ShirtComponent = ({ props }: ShirtProps) => {
   // }, [camera])
 
   useEffect(() => {
-    // if (canvasRef.current) {
-    //   textureRef.current = new Texture(canvasRef.current.getElement())
-    //   // textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-    //   textureRef.current.flipY = false
-    //   textureRef.current.needsUpdate = true
-    //   canvasRef.current.renderAll()
-    // }
-    // if (textureChanged && isLoading) {
-    //   setIsLoading(false)
-    //   setTextureChanged(false)
-    // }
-    // if (colorChanged) {
-    //   textureRef.current = new Texture(canvasRef.current.getElement())
-    //   textureRef.current.anisotropy = gl.capabilities.getMaxAnisotropy()
-    //   textureRef.current.flipY = false
-    //   textureRef.current.needsUpdate = true
-    //   canvasRef.current.renderAll()
-    //   setColorChanged(false)
-    // }
-    // if (textChanged) {
-    //   setTextChanged(false)
-    // }
     canvasRef.current.on('mouse:down', (e: any) => {
       const indexObject = canvasRef.current.getObjects().indexOf(e.target)
       const activeObject = canvasRef.current.getActiveObject()
@@ -186,7 +172,7 @@ const ShirtComponent = ({ props }: ShirtProps) => {
         controlsRef.current.enabled = true
       }
     })
-  }, [])
+  })
 
   // useFrame(() => {
   //   controlsRef.current.update()
@@ -218,6 +204,7 @@ const ShirtComponent = ({ props }: ShirtProps) => {
           scale={100}
         >
           <meshStandardMaterial
+            ref={materialRef}
             attach='material'
             bumpMap={bump}
             bumpScale={0.03}

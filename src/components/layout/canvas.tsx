@@ -20,11 +20,10 @@ import shallow from 'zustand/shallow'
 interface CanvasProps {
   children?: React.ReactNode
   style: CSSProperties
-  width: number
   props?: React.RefAttributes<HTMLCanvasElement>
 }
 
-const LCanvas: FC<CanvasProps> = ({ children, style, width, ...props }) => {
+const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
   const {
     isAddText,
@@ -126,7 +125,6 @@ const LCanvas: FC<CanvasProps> = ({ children, style, width, ...props }) => {
       gl={{ preserveDrawingBuffer: true }}
       onClick={(e) => {
         if (isAddText) {
-          console.log(activeText)
           addText()
         }
       }}

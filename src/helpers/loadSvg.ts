@@ -6,6 +6,7 @@ interface SVGData extends fabric.Object {
 }
 
 const loadSvg = () => {
+  console.log('RUNNING LOAD SVG')
   const path: string =
     window.innerWidth < 800
       ? `/textures/Jersey_COLOR${getState().texturePath}-mobile.svg`
@@ -24,18 +25,27 @@ const loadSvg = () => {
     svgData.top = 0
     svgData.left = 0
 
-    if (getState().colors.length == 0) {
-      for (let i = 0; i < objects.length; i++) {
-        currentColors.push({
-          id: objects[i].id,
-          fill: objects[i].fill,
-        })
-      }
-    } else {
-      currentColors = getState().colors
+    for (let i = 0; i < objects.length; i++) {
+      currentColors.push({
+        id: objects[i].id,
+        fill: objects[i].fill,
+      })
     }
 
-    if (getState().canvas && getState().canvas._objects[0] == undefined) {
+    // if (getState().colors.length == 0) {
+    //   for (let i = 0; i < objects.length; i++) {
+    //     currentColors.push({
+    //       id: objects[i].id,
+    //       fill: objects[i].fill,
+    //     })
+    //   }
+    // } else {
+    //   currentColors = getState().colors
+    // }
+
+    // console.log(currentColors)
+
+    if (getState().canvas && getState().canvas._objects[0] !== undefined) {
       getState().canvas.remove(getState().canvas._objects[0])
     }
 

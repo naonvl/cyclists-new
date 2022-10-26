@@ -307,3 +307,9 @@ export const fonts = [
   'Trebuchet MS',
   'Verdana ',
 ]
+
+export const SHOPIFY_API_URL = 'https://cyclists-com.myshopify.com'
+export const SHOPIFY_ACCESS_TOKEN = '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'
+export const PRODUCT_ID = 7510567682247
+export const API_URL_DEVELOPMENT = 'http://localhost:3000'
+export const API_URL_PRODUCTION = 'https://cyclists-demo-seven.vercel.app'

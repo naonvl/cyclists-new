@@ -12,11 +12,13 @@ import Image from '@/components/dom/Image'
 interface DropdownsProps {
   rootClass?: string
   menuClass?: string
+  componentLoading?: boolean
 }
 
 const DropdownControls: React.FC<DropdownsProps> = ({
   rootClass,
   menuClass,
+  componentLoading,
 }) => {
   const buttonRef = useRef(null)
   const zoomCamera = useStore((state) => state.zoomCamera)
@@ -25,6 +27,9 @@ const DropdownControls: React.FC<DropdownsProps> = ({
 
   const rootClasses = cn(
     'absolute z-30 top-[13rem] lg:top-[8rem] inline-block tezt-left',
+    {
+      ['hidden']: componentLoading,
+    },
     rootClass
   )
   const menuClasses = cn(

@@ -3,24 +3,23 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import InputNumber from '@/components/dom/InputNumber'
 import canvasToSVG from '@/helpers/canvasToSVG'
 import generateTag from '@/helpers/generateTag'
-import { setState, getState } from '@/helpers/store'
+import useStore, { setState, getState } from '@/helpers/store'
 
 interface FormOrderProps {
   componentLoading?: boolean
 }
 
 type FormDataType = {
-  userId: string
   quantity: number
-  name: string
   variantID: number
 }
 
 const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
+  const variants = useStore((state) => state.variants)
+  const tagRef = useRef<string>(generateTag())
+
   const [formData, setFormData] = useState<FormDataType>({
-    userId: '2321321321321',
     quantity: 1,
-    name: 'Delviero Nigel',
     variantID: 42808925978823,
   })
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -37,7 +36,9 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
       },
       body: JSON.stringify({
         ...formData,
-        tag: generateTag,
+        name: getState().user.first_name + ' ' + getState().user.last_name,
+        userId: getState().user.id,
+        tag: tagRef.current,
         attachment: encodedData,
       }),
     })
@@ -53,9 +54,18 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
   const handleChangeForm = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
   ) => {
-    if (e.target.name === 'quantity') {
-      setState({ quantity: Number(e.target.value) })
+    if (e.target.name === 'id') {
+      setState({
+        price: Number(
+          variants[
+            getState()
+              .variants.map((e) => e.id)
+              .indexOf(Number(e.target.value))
+          ].price
+        ),
+      })
     }
+
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
@@ -64,14 +74,28 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
       return setFormData({ ...formData, quantity: 1 })
     }
 
+    setState({
+      quantity: formData.quantity - 1,
+    })
     return setFormData({ ...formData, quantity: formData.quantity - 1 })
   }
 
   const incrementAction = () => {
+    setState({
+      quantity: formData.quantity + 1,
+    })
     return setFormData({ ...formData, quantity: formData.quantity + 1 })
   }
 
-  return (
+  return componentLoading ? (
+    <div>
+      <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
+        <div className='bg-gray-300 animate-pulse w-[120px] h-[45px]' />
+        <div className='bg-gray-300 animate-pulse w-[120px] h-[45px]' />
+        <div className='bg-gray-300 animate-pulse w-[366px] h-[45px]' />
+      </div>
+    </div>
+  ) : (
     <form
       action='https://cyclists.com/cart/add'
       method='POST'
@@ -79,30 +103,33 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
       onSubmit={handleSubmit}
     >
       <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
-        <InputNumber
-          id='totalOrder'
-          name='quantity'
-          type='number'
-          onChange={handleChangeForm}
-          value={formData.quantity}
-          min={1}
-          decrementAction={decrementAction}
-          incrementAction={incrementAction}
-          count={formData.quantity}
-        />
-        <select
-          defaultValue={42808925978823}
-          onChange={handleChangeForm}
-          name='id'
-          className='relative flex items-stretch h-auto text-black bg-white border py-[0.65rem] border-1 rounded-[0.25rem] md:items-center md:my-auto border-[#666]'
-        >
-          <option value={42808925978823}>S</option>
-          <option value={42808926011591}>M</option>
-          <option value={42808926044359}>L</option>
-          <option value={42808926077127}>XL</option>
-          <option value={42808926109895}>2XL</option>
-          <option value={42808926142663}>3XL</option>
-        </select>
+        <input readOnly hidden value={tagRef.current} name='tag' />
+        <div className='flex w-full gap-2 lg:gap-0 lg:flex-col'>
+          <InputNumber
+            rootClass='w-full lg:w-auto'
+            id='totalOrder'
+            name='quantity'
+            type='number'
+            onChange={handleChangeForm}
+            value={formData.quantity}
+            min={1}
+            decrementAction={decrementAction}
+            incrementAction={incrementAction}
+            count={formData.quantity}
+          />
+          <select
+            defaultValue={42808925978823}
+            onChange={handleChangeForm}
+            name='id'
+            className='relative flex items-stretch w-full h-auto text-black bg-white border lg:w-auto py-[0.65rem] border-1 rounded-[0.10rem] md:items-center md:my-auto border-[#666]'
+          >
+            {variants.map((variant, index) => (
+              <option value={variant.id} key={index}>
+                {variant.option2}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type='submit'
           className={cn(

@@ -1,16 +1,20 @@
 import create from 'zustand'
 import shallow from 'zustand/shallow'
 import produce from 'immer'
-import { Canvas } from 'fabric/fabric-impl'
+import { initFabricCanvas } from '@/util/fabric'
+import { defaultDimensions } from './constants'
 
 import type { NextRouter } from 'next/router'
+import type { Canvas } from 'fabric/fabric-impl'
 import type { MutableRefObject } from 'react'
-import { defaultDimensions } from './constants'
 import { Texture } from 'three/src/textures/Texture'
-import { OrthographicCamera } from 'three/src/cameras/OrthographicCamera'
-import { PerspectiveCamera } from 'three/src/cameras/PerspectiveCamera'
+import type { OrthographicCamera } from 'three/src/cameras/OrthographicCamera'
+import type { PerspectiveCamera } from 'three/src/cameras/PerspectiveCamera'
 import type { Group } from 'three/src/objects/Group'
-import { initFabricCanvas } from '@/util/fabric'
+import type { OrbitControls } from 'three-stdlib'
+import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
+import { ICustomer, IVariants } from '@/interfaces'
+
 interface State {
   isMobileVersion: boolean
   setIsMobileVersion: (param: boolean) => void
@@ -32,6 +36,7 @@ interface State {
   setTextureChanged: (param: boolean) => void
   textChanged: boolean
   textActive: boolean
+  variants: Array<IVariants>
   ray: {
     x: number
     y: number
@@ -43,6 +48,7 @@ interface State {
   insertText: string
   resetInsertText: () => void
   resetFabricCanvas: () => void
+  material: MeshStandardMaterial
   openTextModal: boolean
   allText: Array<string>
   editText: boolean
@@ -63,6 +69,7 @@ interface State {
     manual?: boolean
   }
   group: Group
+  controls: OrbitControls
   flipCamera: (param: number) => void
   zoomCamera: (param: 'in' | 'out') => void
   rotateControl: (param: 'toRight' | 'toLeft') => void
@@ -80,6 +87,8 @@ interface State {
   price: number
   isAddText: boolean
   indexActiveText: number
+  changeColor: (index: number, newColor: string) => void
+  user: ICustomer
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
@@ -87,7 +96,11 @@ const useStoreImpl = create<State>()((set, get) => ({
   isAddText: false,
   canvas: null,
   group: null,
+  controls: null,
+  material: null,
   insertText: '',
+  user: null,
+  variants: [],
   resetInsertText: () => set(() => ({ insertText: '', openTextModal: true })),
   resetFabricCanvas: () =>
     set((state) => ({
@@ -178,8 +191,8 @@ const useStoreImpl = create<State>()((set, get) => ({
     set(
       produce((state) => {
         if (state.canvas) {
-          state.texture = new Texture(state.canvas.getElement())
-          state.texture.flipY = false
+          // state.texture = new Texture(state.canvas.getElement())
+          // state.texture.flipY = false
           state.texture.needsUpdate = true
           state.canvas.renderAll()
         }
@@ -195,6 +208,12 @@ const useStoreImpl = create<State>()((set, get) => ({
   setTextActive: (param) => set(() => ({ textActive: param })),
   texturePath: 1,
   colors: [],
+  changeColor: (index, newColor) =>
+    set(
+      produce((state) => {
+        state.colors[index].fill = newColor
+      })
+    ),
   setColors: (data: any) => set(() => ({ colors: data })),
   svgGroup: null,
   progress: true,
@@ -205,7 +224,6 @@ const useStoreImpl = create<State>()((set, get) => ({
     set(
       produce((state) => {
         state.camera.position.z = param
-        console.log(state.camera.position.z)
       })
     ),
   router: null,
