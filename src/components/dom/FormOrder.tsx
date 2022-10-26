@@ -104,7 +104,7 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
     >
       <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
         <input readOnly hidden value={tagRef.current} name='tag' />
-        <div className='flex w-full gap-2 lg:gap-0 lg:flex-col'>
+        <div className='flex w-full gap-2 lg:gap-0'>
           <InputNumber
             rootClass='w-full lg:w-auto'
             id='totalOrder'
