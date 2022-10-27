@@ -112,7 +112,6 @@ const FormOrder: React.FC<FormOrderProps> = ({
       onSubmit={handleSubmit}
     >
       <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
-        <input readOnly hidden value={tagRef.current} name='tag' />
         <div className='flex w-full gap-2'>
           <InputNumber
             rootClass='w-full lg:w-auto'
