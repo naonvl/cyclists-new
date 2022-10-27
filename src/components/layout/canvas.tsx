@@ -7,23 +7,34 @@ import {
   useMemo,
   useCallback,
   MouseEvent,
+  MutableRefObject,
+  useEffect,
 } from 'react'
-import { Canvas } from '@react-three/fiber'
 import { Environment, Preload } from '@react-three/drei'
-import useStore, { setState, getState } from '@/helpers/store'
+import useStore, { setState } from '@/helpers/store'
 import Loader from '@/components/canvas/Loader'
 import { initPatch } from '@/helpers/patch'
 import addText from '@/helpers/addText'
+import { Canvas } from '@react-three/fiber'
 import { getPositionPointer } from '@/helpers/getPositions'
-import shallow from 'zustand/shallow'
+import type { Canvas as FabriCanvas } from 'fabric/fabric-impl'
+import type { Texture } from 'three/src/textures/Texture'
 
 interface CanvasProps {
   children?: React.ReactNode
   style: CSSProperties
+  canvasRef: MutableRefObject<FabriCanvas>
+  textureRef: MutableRefObject<Texture>
   props?: React.RefAttributes<HTMLCanvasElement>
 }
 
-const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
+const LCanvas: FC<CanvasProps> = ({
+  children,
+  style,
+  canvasRef,
+  textureRef,
+  ...props
+}) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
   const {
     isAddText,
@@ -53,8 +64,8 @@ const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
     gl: null,
   })
   const memoizedInitPatch = useMemo(() => {
-    initPatch(threeProps, canvasRenderedRef)
-  }, [threeProps])
+    initPatch({ threeProps, canvasRenderedRef, canvasRef, textureRef })
+  }, [canvasRef, textureRef, threeProps])
 
   const handleClick = useCallback(
     (e: MouseEvent<HTMLDivElement, globalThis.MouseEvent>) => {
@@ -89,7 +100,7 @@ const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
           y: Math.round(uv.y * dimensions.height) - 5.5,
         }
 
-        const canvasRect = canvas.getCenter()
+        const canvasRect = canvasRef.current.getCenter()
         // console.log(e.clientX, e.clientY)
         // console.log({
         //   clientX: canvasRect.left + positionOnScene.x,
@@ -100,19 +111,10 @@ const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
           clientY: canvasRect.top + positionOnScene.y,
         })
 
-        canvas.getSelectionElement().dispatchEvent(simEvt)
+        canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
       }
     },
-    [
-      canvas,
-      dimensions.height,
-      dimensions.width,
-      threeProps.camera,
-      threeProps.mouse,
-      threeProps.pointer,
-      threeProps.raycaster,
-      threeProps.scene,
-    ]
+    [canvasRef, dimensions, threeProps]
   )
 
   return (
@@ -122,10 +124,12 @@ const LCanvas: FC<CanvasProps> = ({ children, style, ...props }) => {
       performance={{ min: 0.1, max: 0.3 }}
       camera={{ position: [0, 0, 500], fov: 30 }}
       style={style}
-      gl={{ preserveDrawingBuffer: true }}
+      gl={{
+        antialias: true,
+      }}
       onClick={(e) => {
         if (isAddText) {
-          addText()
+          addText({ canvasRef, textureRef })
         }
       }}
       // onTouchStart={() => memoizedInitPatch}

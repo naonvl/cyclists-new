@@ -4,21 +4,29 @@ import Dropdowns from '@/components/dom/Dropdowns'
 import useStore, { setState, getState } from '@/helpers/store'
 import { fonts } from '@/constants'
 import { fabricControls } from '@/util/fabric'
+import { ICanvas, ITexture } from '@/interfaces'
 
-const AddTextContent = () => {
-  const editText = useStore((state) => state.editText)
-  const allText = useStore((state) => state.allText)
-  const activeText = useStore((state) => state.activeText)
-  const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
+interface Props extends ICanvas, ITexture {}
+
+const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
+  const [editText, allText, activeText, dropdownStepOpen] = useStore(
+    (state) => [
+      state.ediText,
+      state.allText,
+      state.activeText,
+      state.dropdownStepOpen,
+    ]
+  )
   const handleCloseActiveText = () => {
-    getState().canvas.discardActiveObject()
+    canvasRef.current.discardActiveObject()
     getState().resetActiveText()
-    getState().updateTexture()
+    textureRef.current.needsUpdate = false
+    canvasRef.current.renderAll()
   }
   const handleChangeTextData = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
   ) => {
-    getState().canvas.getActiveObject().set<any>(e.target.name, e.target.value)
+    canvasRef.current.getActiveObject().set<any>(e.target.name, e.target.value)
 
     if (e.target.name == 'text') {
       let newAllText = [...getState().allText]
@@ -34,14 +42,15 @@ const AddTextContent = () => {
         [e.target.name]: e.target.value,
       },
     })
-    getState().updateTexture()
+    textureRef.current.needsUpdate = false
+    canvasRef.current.renderAll()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   const handleDecrement = (name: string) => {
     const currentValue = getState().activeText[name]
     const value = currentValue - 1
-    getState().canvas.getActiveObject().set<any>(name, value)
+    canvasRef.current.getActiveObject().set<any>(name, value)
 
     setState({
       activeText: {
@@ -50,14 +59,15 @@ const AddTextContent = () => {
       },
       textChanged: true,
     })
-    getState().updateTexture()
+    textureRef.current.needsUpdate = false
+    canvasRef.current.renderAll()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   const handleIncrement = (name: string) => {
     const currentValue = getState().activeText[name]
     const value = currentValue + 1
-    getState().canvas.getActiveObject().set<any>(name, value)
+    canvasRef.current.getActiveObject().set<any>(name, value)
 
     setState({
       activeText: {
@@ -66,7 +76,8 @@ const AddTextContent = () => {
       },
       textChanged: true,
     })
-    getState().updateTexture()
+    textureRef.current.needsUpdate = false
+    canvasRef.current.renderAll()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
@@ -76,13 +87,13 @@ const AddTextContent = () => {
   return (
     <Dropdowns
       onClick={() => setState({ dropdownStepOpen: 3 })}
-      open={dropdownSetOpen === 3}
+      open={dropdownStepOpen === 3}
       buttonName='Add text'
       rootClass='w-full mb-2 z-0'
       menuClass='w-full'
       label='stepThree'
     >
-      {!editText ? (
+      {!getState().editText ? (
         <>
           <div className='flex flex-col w-full overflow-hidden'>
             <div className='mx-auto mb-2'>
@@ -123,16 +134,17 @@ const AddTextContent = () => {
                   <div className='flex'>
                     <button
                       onClick={() => {
-                        getState().canvas.setActiveObject(
-                          getState().canvas._iTextInstances[index]
+                        canvasRef.current.setActiveObject(
+                          canvasRef.current._iTextInstances[index]
                         )
                         setState({
                           indexActiveText: index + 1,
-                          activeText: getState().canvas.getActiveObject(),
+                          activeText: canvasRef.current.getActiveObject(),
                           editText: true,
                         })
                         fabricControls()
-                        getState().updateTexture()
+                        textureRef.current.needsUpdate = false
+                        canvasRef.current.renderAll()
                       }}
                     >
                       edit
@@ -140,10 +152,10 @@ const AddTextContent = () => {
                     <button
                       className='ml-[10px]'
                       onClick={() => {
-                        getState().canvas.remove(
-                          getState().canvas._iTextInstances[index]
+                        canvasRef.current.remove(
+                          canvasRef.current._iTextInstances[index]
                         )
-                        getState().canvas.renderAll()
+                        canvasRef.current.renderAll()
                         setState({
                           allText: allText.filter((item) => item !== data),
                           textChanged: true,

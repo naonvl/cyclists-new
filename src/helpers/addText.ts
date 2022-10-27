@@ -1,7 +1,10 @@
 import { fabric } from 'fabric'
 import { getState, setState } from '@/helpers/store'
+import { ICanvas, ITexture } from '@/interfaces'
 
-const addText = () => {
+interface Props extends ICanvas, ITexture {}
+
+const addText = ({ canvasRef, textureRef }: Props) => {
   const jerseyText = new fabric.IText(getState().insertText, {
     text: getState().insertText,
     fontFamily: 'Arial',
@@ -22,7 +25,7 @@ const addText = () => {
     centeredScaling: true,
   })
 
-  if (getState().canvas) {
+  if (canvasRef.current) {
     jerseyText.setControlsVisibility({
       mt: false,
       mb: false,
@@ -30,16 +33,17 @@ const addText = () => {
       mr: false,
       mtr: false,
     })
-    getState().canvas.add(jerseyText)
-    getState().canvas.setActiveObject(jerseyText)
-    getState().canvas.renderAll()
+    canvasRef.current.add(jerseyText)
+    canvasRef.current.setActiveObject(jerseyText)
+    canvasRef.current.renderAll()
     setState({
       allText: [...getState().allText, getState().insertText],
-      activeText: getState().canvas.getActiveObject(),
+      activeText: canvasRef.current.getActiveObject(),
       editText: true,
       isAddText: false,
     })
-    getState().updateTexture()
+    textureRef.current.needsUpdate = true
+    canvasRef.current.renderAll()
     // getState().flipCamera(camera.position.z + 0.001)
   }
 }

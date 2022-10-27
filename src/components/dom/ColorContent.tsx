@@ -1,43 +1,41 @@
 import Dropdowns from '@/components/dom/Dropdowns'
 import Text from '@/components/dom/Text'
 import Color from '@/components/dom/Color'
-import useStore, { setState, getState, subscribe } from '@/helpers/store'
-import { useEffect } from 'react'
-import loadSvg from '@/helpers/loadSvg'
-import { Texture } from 'three/src/textures/Texture'
+import useStore, { setState } from '@/helpers/store'
+import { ICanvas, ITexture } from '@/interfaces'
 
-const ColorContent = () => {
-  const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
-  const colors = useStore((state) => state.colors)
-  const canvas = useStore((state) => state.canvas)
-  const texture = useStore((state) => state.texture)
-  const svgGroup = useStore((state) => state.svgGroup)
+interface Props extends ICanvas, ITexture {}
+
+const ColorContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
+  const [dropdownStepOpen, colors, svgGroup, changeColor] = useStore(
+    (state) => [
+      state.dropdownStepOpen,
+      state.colors,
+      state.svgGroup,
+      state.changeColor,
+    ]
+  )
 
   const handleSetColor = (e: string, index: number) => {
-    // let newArrColors = [...getState().colors]
-    // newArrColors[index].fill = e
     svgGroup._objects[index].set('fill', e)
-    getState().changeColor(index, e)
-    // console.log()
+    changeColor(index, e)
     setState({
       svgGroup: svgGroup,
       colorChanged: true,
     })
-    getState()
-      .canvas.remove(getState().canvas._objects[0])
+    canvasRef.current
+      .remove(canvasRef.current._objects[0])
       .add(svgGroup)
       .sendToBack(svgGroup)
-    // console.log(getState().canvas.el)
-    // getState().canvas.add(svgGroup)
-    // getState().canvas.sendToBack(svgGroup)
-    getState().updateTexture()
+    textureRef.current.needsUpdate = true
+    canvasRef.current.renderAll()
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   return (
     <Dropdowns
       onClick={() => setState({ dropdownStepOpen: 2 })}
-      open={dropdownSetOpen === 2}
+      open={dropdownStepOpen === 2}
       buttonName='Choose your colours'
       rootClass='w-full mb-2 z-40'
       menuClass='w-full'
@@ -45,7 +43,7 @@ const ColorContent = () => {
       label='stepTwo'
     >
       <div className='px-2 grid grid-cols-3 gap-3'>
-        {getState().colors.map((data, index) => (
+        {colors.map((data, index) => (
           <div
             key={index}
             className='inline-flex flex-col items-center justify-between w-full'

@@ -1,25 +1,14 @@
-import { MutableRefObject, useCallback, useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import getWindowDimensions from '@/helpers/getWindowDimensions'
 import { getState, setState } from '@/helpers/store'
 import loadSvg from '@/helpers/loadSvg'
 import { initFabricCanvas } from '@/util/fabric'
-import { Canvas } from 'fabric/fabric-impl'
+import { ICanvas, ITexture } from '@/interfaces'
 
-interface Props {
-  canvasRef: MutableRefObject<Canvas>
-  cid: string | number
-}
+interface Props extends ICanvas, ITexture {}
 
-const useFirstRender = ({ canvasRef, cid }: Props) => {
+const useFirstRender = ({ canvasRef, textureRef }: Props) => {
   const setupInitialLoad = useCallback(async () => {
-    const reqUser = await fetch(`/api/customers/${cid}`)
-    const resUser = await reqUser.json()
-    const user = await resUser.user
-
-    if (!user && getState().isLoading) {
-      return setState({ isLoading: false })
-    }
-
     const { canvasWidth, canvasHeight, isMobileVersion } = getWindowDimensions()
 
     setState({
@@ -27,26 +16,27 @@ const useFirstRender = ({ canvasRef, cid }: Props) => {
       isMobileVersion,
       texturePath: 1,
     })
-    loadSvg()
 
     const fabricCanvas = initFabricCanvas({
       width: getState().dimensions.width,
       height: getState().dimensions.height,
     })
+
     canvasRef.current = fabricCanvas
 
+    loadSvg({ canvasRef, textureRef })
+
     setState({
-      canvas: fabricCanvas,
-      user: user,
+      firstLoadCanvas: true,
     })
-  }, [canvasRef, cid])
+  }, [canvasRef, textureRef])
 
   useEffect(() => {
-    if (!getState().texture && cid && getState().isLoading) {
+    if (!getState().firstLoadCanvas && getState().isLoading) {
       console.log('[DOM] First render!')
       setupInitialLoad()
     }
-  }, [cid, setupInitialLoad])
+  }, [setupInitialLoad])
 }
 
 export default useFirstRender

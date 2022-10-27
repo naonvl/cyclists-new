@@ -11,6 +11,7 @@ import useFirstRenderModel from '@/components/hooks/useFirstRenderModel'
 import type { Group } from 'three/src/objects/Group'
 import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
 import FlipControls from '@/components/canvas/FlipControls'
+
 import {
   useGLTF,
   OrbitControls,
@@ -37,24 +38,29 @@ type GLTFResult = GLTF & {
 
 interface ShirtProps {
   canvasRef: MutableRefObject<Canvas>
+  groupRef: MutableRefObject<Group>
+  controlsRef: MutableRefObject<OrbitControlsImpl>
+  textureRef: MutableRefObject<Texture>
   props?: JSX.IntrinsicElements['group']
 }
 
-const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
+const ShirtComponent = ({
+  canvasRef,
+  groupRef,
+  textureRef,
+  controlsRef,
+  props,
+}: ShirtProps) => {
   const { nodes, materials } = useGLTF(
     '/model/n-cycling-jersey.drc.glb'
   ) as unknown as GLTFResult
   const { camera, gl, pointer, mouse, raycaster, scene } = useThree()
 
-  const groupRef = useRef<Group>(null)
-  const textureRef = useRef<Texture>(getState().texture) // default: null
-  const controlsRef = useRef<OrbitControlsImpl>(null)
-  const materialRef = useRef<MeshStandardMaterial>(null)
   const canvasRenderedRef = useRef<HTMLCanvasElement>(
     document.getElementsByTagName('canvas')[0]
   )
+
   const inputRef = React.useRef(null)
-  const colorChanged = useStore((state) => state.colorChanged)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -119,30 +125,18 @@ const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
     groupRef,
     canvasRef,
     textureRef,
-    materialRef,
   })
-
-  useEffect(
-    () =>
-      subscribe((state, prevState) => {
-        canvasRef.current = state.canvas
-        textureRef.current = state.texture
-        controlsRef.current = state.controls
-        groupRef.current = state.group
-        materialRef.current = state.material
-      }),
-    [canvasRef]
-  )
 
   // useEffect(() => {
   //   setState({ camera: camera })
   // }, [camera])
 
   useEffect(() => {
+    //   textureRef.current.needsUpdate = true
+    //   canvasRef.current.renderAll()
     canvasRef.current.on('mouse:down', (e: any) => {
       const indexObject = canvasRef.current.getObjects().indexOf(e.target)
       const activeObject = canvasRef.current.getActiveObject()
-
       // if (
       //   getState().canvas._iTextInstances &&
       //   getState().canvas._iTextInstances.length > 0
@@ -152,7 +146,6 @@ const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
       //     getState().canvas._iTextInstances[indexActiveObject]
       //   )
       // }
-
       if (e.target && e.target.text) {
         // state.activeText = state.canvas.getActiveObject()
         // state.editText = true
@@ -167,17 +160,17 @@ const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
           editText: false,
           indexActiveText: 0,
         })
-        getState().canvas.discardActiveObject(e)
+        canvasRef.current.discardActiveObject(e)
         // getState().resetActiveText()
         controlsRef.current.enabled = true
       }
     })
   })
 
-  // useFrame(() => {
-  //   controlsRef.current.update()
-  //   // setZoom(Math.floor(state.camera.position.z))
-  // })
+  useFrame((state) => {
+    controlsRef.current.update()
+    // setZoom(Math.floor(state.camera.position.z))
+  })
 
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
@@ -204,7 +197,6 @@ const ShirtComponent = ({ canvasRef, props }: ShirtProps) => {
           scale={100}
         >
           <meshStandardMaterial
-            ref={materialRef}
             attach='material'
             bumpMap={bump}
             bumpScale={0.03}

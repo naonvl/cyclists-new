@@ -1,3 +1,7 @@
+import { Canvas } from 'fabric/fabric-impl'
+import { Texture } from 'three/src/textures/Texture'
+import { MutableRefObject } from 'react'
+
 /**
  * @module App
  */
@@ -115,4 +119,12 @@ export interface ICustomer {
   last_order_name: null | string
   currency: string
   phone: null | string
+}
+
+export interface ICanvas {
+  canvasRef: MutableRefObject<Canvas>
+}
+
+export interface ITexture {
+  textureRef: MutableRefObject<Texture>
 }

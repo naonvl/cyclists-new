@@ -1,19 +1,23 @@
 import { fabric } from 'fabric'
 import { getState, setState } from './store'
+import { Texture } from 'three/src/textures/Texture'
+import { ICanvas, ITexture } from '@/interfaces'
 
 interface SVGData extends fabric.Object {
   id: string
 }
 
-const loadSvg = () => {
+interface Props extends ICanvas, ITexture {}
+
+const loadSvg = ({ canvasRef, textureRef }: Props) => {
   console.log('RUNNING LOAD SVG')
-  const path: string =
-    window.innerWidth < 800
-      ? `/textures/Jersey_COLOR${getState().texturePath}-mobile.svg`
-      : `/textures/Jersey_COLOR${getState().texturePath}.svg`
+  const path: string = getState().isMobileVersion
+    ? `/textures/Jersey_COLOR${getState().texturePath}-mobile.svg`
+    : `/textures/Jersey_COLOR${getState().texturePath}.svg`
 
   let svgData: fabric.Object | fabric.Group = null
   let currentColors: Array<{ id: any; fill: any }> = []
+
   fabric.loadSVGFromURL(path, (objects: SVGData[]) => {
     svgData = fabric.util.groupSVGElements(objects, {
       width: getState().dimensions.width,
@@ -24,6 +28,7 @@ const loadSvg = () => {
 
     svgData.top = 0
     svgData.left = 0
+    svgData.name = `Jersey_COLOR${getState().texturePath}`
 
     for (let i = 0; i < objects.length; i++) {
       currentColors.push({
@@ -45,15 +50,23 @@ const loadSvg = () => {
 
     // console.log(currentColors)
 
-    if (getState().canvas && getState().canvas._objects[0] !== undefined) {
-      getState().canvas.remove(getState().canvas._objects[0])
+    if (canvasRef.current && canvasRef.current._objects.length > 0) {
+      canvasRef.current.remove(canvasRef.current._objects[0])
     }
 
-    if (getState().canvas && objects && objects.length > 0) {
-      getState().canvas.add(svgData)
-      getState().canvas.sendToBack(svgData)
-      getState().canvas.renderAll()
-      setState({ svgGroup: svgData, colors: currentColors })
+    if (canvasRef.current && objects && objects.length > 0) {
+      canvasRef.current.add(svgData)
+      canvasRef.current.sendToBack(svgData)
+      canvasRef.current.renderAll()
+
+      textureRef.current = new Texture(canvasRef.current.getElement())
+      textureRef.current.flipY = false
+      textureRef.current.needsUpdate = true
+
+      setState({
+        svgGroup: svgData,
+        colors: currentColors,
+      })
     }
   })
 }

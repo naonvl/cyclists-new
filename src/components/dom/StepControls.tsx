@@ -18,8 +18,10 @@ const contents = {
 }
 
 const StepControls = () => {
-  const dropdownStepOpen = useStore((state) => state.dropdownStepOpen)
-  const isLoading = useStore((state) => state.isLoading)
+  const [dropdownStepOpen, isLoading] = useStore((state) => [
+    state.dropdownStepOpen,
+    state.isLoading,
+  ])
 
   return isLoading ? (
     <div className='flex justify-between overflow-hidden md:justify-between'>

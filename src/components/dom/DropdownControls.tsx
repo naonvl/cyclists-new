@@ -21,8 +21,10 @@ const DropdownControls: React.FC<DropdownsProps> = ({
   componentLoading,
 }) => {
   const buttonRef = useRef(null)
-  const zoomCamera = useStore((state) => state.zoomCamera)
-  const rotateControl = useStore((state) => state.rotateControl)
+  const [zoomCamera, rotateControl] = useStore((state) => [
+    state.zoomCamera,
+    state.rotateControl,
+  ])
   const [open, setOpen] = useState<boolean>(true)
 
   const rootClasses = cn(

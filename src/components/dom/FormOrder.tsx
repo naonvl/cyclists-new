@@ -3,23 +3,31 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import InputNumber from '@/components/dom/InputNumber'
 import canvasToSVG from '@/helpers/canvasToSVG'
 import generateTag from '@/helpers/generateTag'
-import useStore, { setState, getState } from '@/helpers/store'
+import useStore, { setState } from '@/helpers/store'
+import { ICanvas } from '@/interfaces'
 
-interface FormOrderProps {
+interface FormOrderProps extends ICanvas {
   componentLoading?: boolean
+  cid: number | string
 }
 
 type FormDataType = {
   quantity: number
+  size: string
   variantID: number
 }
 
-const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
-  const variants = useStore((state) => state.variants)
+const FormOrder: React.FC<FormOrderProps> = ({
+  componentLoading,
+  canvasRef,
+  cid,
+}) => {
+  const [variants] = useStore((state) => [state.variants])
   const tagRef = useRef<string>(generateTag())
 
   const [formData, setFormData] = useState<FormDataType>({
     quantity: 1,
+    size: 'S',
     variantID: 42808925978823,
   })
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -27,7 +35,7 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
-    const encodedData = canvasToSVG(getState().canvas)
+    const encodedData = canvasToSVG(canvasRef.current)
 
     const requestCreateOrder = await fetch('/api/createorder', {
       method: 'POST',
@@ -36,9 +44,7 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
       },
       body: JSON.stringify({
         ...formData,
-        name: getState().user.first_name + ' ' + getState().user.last_name,
-        userId: getState().user.id,
-        tag: tagRef.current,
+        userId: cid,
         attachment: encodedData,
       }),
     })
@@ -55,13 +61,16 @@ const FormOrder: React.FC<FormOrderProps> = ({ componentLoading }) => {
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
   ) => {
     if (e.target.name === 'id') {
+      setFormData({
+        ...formData,
+        size: variants[
+          variants.map((e: any) => e.id).indexOf(Number(e.target.value))
+        ].option2,
+      })
       setState({
         price: Number(
-          variants[
-            getState()
-              .variants.map((e) => e.id)
-              .indexOf(Number(e.target.value))
-          ].price
+          variants[variants.map((e) => e.id).indexOf(Number(e.target.value))]
+            .price
         ),
       })
     }

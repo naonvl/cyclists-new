@@ -4,33 +4,37 @@ import Image from '@/components/dom/Image'
 import useStore, { setState } from '@/helpers/store'
 import { jerseyStyles } from '@/constants'
 import loadSvg from '@/helpers/loadSvg'
+import { Texture } from 'three/src/textures/Texture'
+import { ICanvas, ITexture } from '@/interfaces'
 
-const TextureContent = () => {
-  const dropdownSetOpen = useStore((state) => state.dropdownStepOpen)
-  const texturePath = useStore((state) => state.texturePath)
-  const isLoading = useStore((state) => state.isLoading)
+interface Props extends ICanvas, ITexture {}
+
+const TextureContent = ({ canvasRef, textureRef }: Props) => {
+  const [
+    dropdownStepOpen,
+    texturePath,
+    isLoading,
+    isMobileVersion,
+    dimensions,
+  ] = useStore((state) => [
+    state.dropdownStepOpen,
+    state.texturePath,
+    state.isLoading,
+    state.isMobileVersion,
+    state.dimensions,
+  ])
 
   const handleChangeTexture = (index: number) => {
     setState({
-      loadingModel: true,
-      textureChanged: true,
       texturePath: index + 1,
     })
-    // canvasRef.current.clear()
-    // canvasRef.current.dispose()
-    return loadSvg()
-
-    // initFabricCanvas({
-    //   canvasRef,
-    //   width: dimensions.width,
-    //   height: dimensions.height,
-    // })
+    loadSvg({ canvasRef, textureRef })
   }
 
   return (
     <Dropdowns
       onClick={() => setState({ dropdownStepOpen: 1 })}
-      open={dropdownSetOpen === 1}
+      open={dropdownStepOpen === 1}
       buttonName='Choose your style'
       rootClass='w-full mb-2 z-0'
       menuClass='w-full'

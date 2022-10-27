@@ -1,22 +1,18 @@
 import create from 'zustand'
 import shallow from 'zustand/shallow'
 import produce from 'immer'
-import { initFabricCanvas } from '@/util/fabric'
 import { defaultDimensions } from './constants'
 
 import type { NextRouter } from 'next/router'
-import type { Canvas } from 'fabric/fabric-impl'
 import type { MutableRefObject } from 'react'
-import { Texture } from 'three/src/textures/Texture'
 import type { OrthographicCamera } from 'three/src/cameras/OrthographicCamera'
 import type { PerspectiveCamera } from 'three/src/cameras/PerspectiveCamera'
-import type { Group } from 'three/src/objects/Group'
-import type { OrbitControls } from 'three-stdlib'
-import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
-import { ICustomer, IVariants } from '@/interfaces'
+import { IVariants } from '@/interfaces'
 
 interface State {
   isMobileVersion: boolean
+  firstLoadTexture: boolean
+  firstLoadCanvas: boolean
   setIsMobileVersion: (param: boolean) => void
   dimensions: { width: number; height: number }
   setDimensions: (data: { width: number; height: number }) => void
@@ -47,8 +43,6 @@ interface State {
   dom: MutableRefObject<any>
   insertText: string
   resetInsertText: () => void
-  resetFabricCanvas: () => void
-  material: MeshStandardMaterial
   openTextModal: boolean
   allText: Array<string>
   editText: boolean
@@ -63,17 +57,12 @@ interface State {
   }
   resetActiveText: () => void
   loadingModel: boolean
-  canvas: Canvas
-  texture: Texture
   camera: (OrthographicCamera | PerspectiveCamera) & {
     manual?: boolean
   }
-  group: Group
-  controls: OrbitControls
   flipCamera: (param: number) => void
   zoomCamera: (param: 'in' | 'out') => void
   rotateControl: (param: 'toRight' | 'toLeft') => void
-  updateTexture: () => void
   changeActiveText: (param: {
     text: string
     fontFamily: string
@@ -88,27 +77,17 @@ interface State {
   isAddText: boolean
   indexActiveText: number
   changeColor: (index: number, newColor: string) => void
-  user: ICustomer
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
+  dropdownStepOpen: 1,
+  firstLoadTexture: false,
+  firstLoadCanvas: false,
   indexActiveText: 0,
   isAddText: false,
-  canvas: null,
-  group: null,
-  controls: null,
-  material: null,
   insertText: '',
-  user: null,
   variants: [],
   resetInsertText: () => set(() => ({ insertText: '', openTextModal: true })),
-  resetFabricCanvas: () =>
-    set((state) => ({
-      canvas: initFabricCanvas({
-        width: state.dimensions.width,
-        height: state.dimensions.height,
-      }),
-    })),
   openTextModal: false,
   allText: [],
   editText: false,
@@ -146,7 +125,6 @@ const useStoreImpl = create<State>()((set, get) => ({
       },
       editText: false,
     })),
-  dropdownStepOpen: 1,
   isMobileVersion: false,
   loadingModel: false,
   quantity: 1,
@@ -187,17 +165,6 @@ const useStoreImpl = create<State>()((set, get) => ({
   setDimensions: ({ width, height }) =>
     set(() => ({ dimensions: { width: width, height: height } })),
   texture: null,
-  updateTexture: () =>
-    set(
-      produce((state) => {
-        if (state.canvas) {
-          // state.texture = new Texture(state.canvas.getElement())
-          // state.texture.flipY = false
-          state.texture.needsUpdate = true
-          state.canvas.renderAll()
-        }
-      })
-    ),
   colorChanged: false,
   textureChanged: false,
   setTextureChanged: (param) => set(() => ({ textureChanged: param })),

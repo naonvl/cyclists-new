@@ -2,9 +2,13 @@ import { GetStaticPaths, GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect } from 'react'
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
-import useStore from '@/helpers/store'
+import useStore, { getState, setState } from '@/helpers/store'
 
 import Image from '@/components/dom/Image'
+import type { Canvas } from 'fabric/fabric-impl'
+import { Texture } from 'three/src/textures/Texture'
+import type { OrbitControls } from 'three-stdlib'
+import type { Group } from 'three/src/objects/Group'
 
 import Text from '@/components/dom/Text'
 import Helpers from '@/components/dom/Helpers'
@@ -20,8 +24,15 @@ import FormOrder from '@/components/dom/FormOrder'
 import Overlay from '@/components/dom/Overlay'
 import FlipControls from '@/components/canvas/FlipControls'
 import PriceTag from '@/components/dom/PriceTag'
-import type { Canvas } from 'fabric/fabric-impl'
+
 import Link from 'next/link'
+import loadSvg from '@/helpers/loadSvg'
+import { fabric } from 'fabric'
+import { initFabricCanvas } from '@/util/fabric'
+
+interface SVGData extends fabric.Object {
+  id: string
+}
 
 // Dynamic import is used to prevent a payload when the website start that will include threejs r3f etc..
 // WARNING ! errors might get obfuscated by using dynamic import.
@@ -37,48 +48,22 @@ const LCanvas = dynamic(() => import('@/components/layout/canvas'), {
 // dom components goes here
 const CustomerPage = (props) => {
   const canvasRef = useRef<Canvas>(null)
+  const textureRef = useRef<Texture>(null)
+  const controlsRef = useRef<OrbitControls>(null)
+  const groupRef = useRef<Group>(null)
 
-  const isAddText = useStore((state) => state.isAddText)
-  const user = useStore((state) => state.user)
-  const isLoading = useStore((state) => state.isLoading)
-  const isMobileVersion = useStore((state) => state.isMobileVersion)
+  const [isAddText, isLoading, isMobileVersion, dimensions] = useStore(
+    (state) => [
+      state.isAddText,
+      state.isLoading,
+      state.isMobileVersion,
+      state.dimensions,
+    ]
+  )
   const cancelModalTextRef = useRef(null)
   const [openTextModal, setOpenTextModal] = useState(false)
 
-  useFirstRender({ canvasRef, cid: props.cid })
-
-  if (!user && !isLoading) {
-    return (
-      <div className='flex items-center justify-center w-full h-screen'>
-        <div className='flex flex-col'>
-          <div className='flex mx-auto text-center'>
-            <Image
-              alt='Cyclists'
-              layout='fill'
-              src='/img/cyclists-logo.webp'
-              width={300}
-              height={100}
-              objectFit='contain'
-              quality={90}
-            />
-          </div>
-          <div className='flex flex-col my-3'>
-            <p className='text-center'>
-              Sorry, you can&apos;t use this feature before logging in
-            </p>
-            <Link href='https://cyclists.com/account/login' passHref>
-              <a
-                target='_blank'
-                className='w-full px-4 py-3 my-2 text-sm text-center text-white uppercase bg-pink-600 border border-pink-600 hover:border hover:border-black hover:bg-white hover:text-black'
-              >
-                Go to login page
-              </a>
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  useFirstRender({ canvasRef, textureRef })
 
   return (
     <>
@@ -107,14 +92,21 @@ const CustomerPage = (props) => {
                 </div>
               ) : null}
             </div>
-            {CustomerPage?.r3f && canvasRef.current && isMobileVersion ? (
+            {CustomerPage?.r3f && isMobileVersion ? (
               <LCanvas
                 style={{
                   height: '303px',
                   zIndex: isAddText ? '99' : '20',
                 }}
+                canvasRef={canvasRef}
+                textureRef={textureRef}
               >
-                {CustomerPage.r3f({ canvasRef })}
+                {CustomerPage.r3f({
+                  canvasRef,
+                  textureRef,
+                  controlsRef,
+                  groupRef,
+                })}
               </LCanvas>
             ) : null}
           </div>
@@ -124,9 +116,9 @@ const CustomerPage = (props) => {
           </div>
 
           <div className='mt-4 mb-1'>
-            <TextureContent />
-            <ColorContent />
-            <AddTextContent />
+            <TextureContent canvasRef={canvasRef} textureRef={textureRef} />
+            <ColorContent canvasRef={canvasRef} textureRef={textureRef} />
+            <AddTextContent canvasRef={canvasRef} textureRef={textureRef} />
           </div>
 
           <div className='mb-3'>
@@ -144,7 +136,11 @@ const CustomerPage = (props) => {
             <StepNavigation />
           </div>
 
-          <FormOrder componentLoading={isLoading} />
+          <FormOrder
+            canvasRef={canvasRef}
+            cid={props.cid}
+            componentLoading={isLoading}
+          />
         </div>
 
         <div className='block my-2 lg:hidden'>
@@ -173,15 +169,22 @@ const CustomerPage = (props) => {
               </div>
             ) : null}
           </div>
-          {CustomerPage?.r3f && canvasRef.current && !isMobileVersion ? (
+          {CustomerPage?.r3f && !isMobileVersion ? (
             <LCanvas
               style={{
                 width: '596px',
                 height: '543px',
                 zIndex: isAddText ? '99' : '20',
               }}
+              canvasRef={canvasRef}
+              textureRef={textureRef}
             >
-              {CustomerPage.r3f({ canvasRef })}
+              {CustomerPage.r3f({
+                canvasRef,
+                textureRef,
+                controlsRef,
+                groupRef,
+              })}
             </LCanvas>
           ) : null}
           <Helpers componentLoading={isLoading} isMobileVersion={false} />
@@ -203,9 +206,14 @@ const CustomerPage = (props) => {
 
 // canvas components goes here
 // It will receive same props as CustomerPage component (from getStaticProps, etc.)
-CustomerPage.r3f = ({ canvasRef }) => (
+CustomerPage.r3f = ({ canvasRef, textureRef, controlsRef, groupRef }) => (
   <>
-    <Shirt canvasRef={canvasRef} />
+    <Shirt
+      canvasRef={canvasRef}
+      controlsRef={controlsRef}
+      groupRef={groupRef}
+      textureRef={textureRef}
+    />
   </>
 )
 
