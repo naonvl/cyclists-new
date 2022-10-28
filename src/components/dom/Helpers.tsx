@@ -1,6 +1,7 @@
 import cn from 'clsx'
 import Image from '@/components/dom/Image'
 import Text from '@/components/dom/Text'
+import useStore, { setState } from '@/helpers/store'
 
 interface Props {
   componentLoading?: boolean
@@ -8,6 +9,8 @@ interface Props {
 }
 
 const Helpers: React.FC<Props> = ({ componentLoading, isMobileVersion }) => {
+  const isAutorotate = useStore((state) => state.isAutorotate)
+
   return componentLoading ? (
     <div
       className={cn(
@@ -40,7 +43,10 @@ const Helpers: React.FC<Props> = ({ componentLoading, isMobileVersion }) => {
         }
       )}
     >
-      <div className='relative inline-flex'>
+      <div
+        className='relative inline-flex'
+        onClick={() => setState({ isAutorotate: !isAutorotate })}
+      >
         <Image
           alt='360'
           src='/icons/360.png'

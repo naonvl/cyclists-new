@@ -107,7 +107,6 @@ const ShirtComponent = ({
       const indexObject = canvasRef.current.getObjects().indexOf(e.target)
       const activeObject = canvasRef.current.getActiveObject()
       if (e.target && e.target.text) {
-        console.log(e.target.text)
         setState({
           indexActiveText: indexObject,
           activeText: activeObject,

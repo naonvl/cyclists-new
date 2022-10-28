@@ -12,7 +12,6 @@ interface Props extends ICanvas, ITexture {
 }
 
 const loadSvg = ({ canvasRef, textureRef, texturePath }: Props) => {
-  console.log('RUNNING LOAD SVG')
   const path: string = getState().isMobileVersion
     ? `/textures/Jersey_COLOR${texturePath}-mobile.svg`
     : `/textures/Jersey_COLOR${texturePath}.svg`
@@ -31,13 +30,6 @@ const loadSvg = ({ canvasRef, textureRef, texturePath }: Props) => {
     svgData.top = 0
     svgData.left = 0
     svgData.name = `Jersey_COLOR${texturePath}`
-
-    // for (let i = 0; i < objects.length; i++) {
-    //   currentColors.push({
-    //     id: objects[i].id,
-    //     fill: objects[i].fill,
-    //   })
-    // }
 
     // First render
     if (getState().colors.length === 0) {
@@ -99,8 +91,6 @@ const loadSvg = ({ canvasRef, textureRef, texturePath }: Props) => {
         }
       }
     }
-
-    console.log(currentColors)
 
     if (canvasRef.current && canvasRef.current._objects.length > 0) {
       canvasRef.current.remove(canvasRef.current._objects[0])

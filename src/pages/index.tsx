@@ -21,9 +21,9 @@ const Page = () => {
 
 export const getStaticProps: GetStaticProps = async () => {
   return {
-    redirect: {
-      destination: '/6173971775687',
-    },
+    // redirect: {
+    //   destination: '/6173971775687',
+    // },
     props: {},
   }
 }
