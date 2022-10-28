@@ -1,4 +1,9 @@
-import React, { MutableRefObject, useLayoutEffect, useMemo } from 'react'
+import React, {
+  MutableRefObject,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { Texture } from 'three/src/textures/Texture'
 import type { Canvas } from 'fabric/fabric-impl'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
@@ -11,8 +16,9 @@ import useFirstRenderModel from '@/components/hooks/useFirstRenderModel'
 import type { Group } from 'three/src/objects/Group'
 import { Vector, Vector2 } from 'three/src/math/Vector2'
 import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
-import FlipControls from '@/components/canvas/FlipControls'
+import FlipControls from '@/components/dom/FlipControls'
 import { fabric } from 'fabric'
+import { useSpring, animated, config } from '@react-spring/three'
 
 import {
   useGLTF,
@@ -65,6 +71,8 @@ const ShirtComponent = ({
   const isAddText = useStore((state) => state.isAddText)
   const flipChanged = useStore((state) => state.flipChanged)
   const flipStatus = useStore((state) => state.flipStatus)
+  const isAutoRotate = useStore((state) => state.isAutoRotate)
+  const isSpringActive = useStore((state) => state.isSpringActive)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -80,11 +88,23 @@ const ShirtComponent = ({
   }, [canvasRef, textureRef])
 
   useFirstRenderModel({
-    // onTouch: handleTouch,
     controlsRef,
     groupRef,
     canvasRef,
-    textureRef,
+  })
+
+  const { rotation, position } = useSpring({
+    from: {
+      rotation: [0, 3, 0],
+      position: [0, -50, 0],
+    },
+    to: {
+      rotation: [0, 0, 0],
+      position: [0, 0, 0],
+    },
+    // rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
+    // position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
+    config: config.slow,
   })
 
   useEffect(() => {
@@ -130,6 +150,7 @@ const ShirtComponent = ({
     controlsRef,
     flipChanged,
     flipStatus,
+    isAutoRotate,
   ])
 
   useFrame((state) => {
@@ -147,11 +168,14 @@ const ShirtComponent = ({
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
     <>
-      <group
+      <animated.group
         ref={groupRef}
         dispose={null}
+        rotation={rotation as any}
+        position={position as any}
         onPointerDown={(e) => {
           e.stopPropagation()
+          // setIsClicked(true)
 
           ray.current = e.intersections[0].uv
           if (isAddText) {
@@ -225,9 +249,11 @@ const ShirtComponent = ({
             <texture attach='map' image={canvasRef.current.getElement()} />
           </meshStandardMaterial>
         </mesh>
-      </group>
+      </animated.group>
       <OrbitControls
         ref={controlsRef}
+        autoRotate={isAutoRotate}
+        autoRotateSpeed={10}
         args={[camera, gl.domElement]}
         minPolarAngle={Math.PI / 2.5}
         maxPolarAngle={Math.PI / 1.9}

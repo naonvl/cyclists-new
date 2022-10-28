@@ -79,12 +79,14 @@ interface State {
   indexActiveText: number
   flipStatus: 'front' | 'back'
   flipChanged: boolean
-  isAutorotate: boolean
+  isAutoRotate: boolean
+  isSpringActive: boolean
   changeColor: (index: number, newColor: string) => void
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
-  isAutorotate: false,
+  isAutoRotate: false,
+  isSpringActive: false,
   flipStatus: 'front',
   flipChanged: false,
   changed: false,

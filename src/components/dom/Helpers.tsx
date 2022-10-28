@@ -9,7 +9,7 @@ interface Props {
 }
 
 const Helpers: React.FC<Props> = ({ componentLoading, isMobileVersion }) => {
-  const isAutorotate = useStore((state) => state.isAutorotate)
+  const isAutoRotate = useStore((state) => state.isAutoRotate)
 
   return componentLoading ? (
     <div
@@ -44,8 +44,8 @@ const Helpers: React.FC<Props> = ({ componentLoading, isMobileVersion }) => {
       )}
     >
       <div
-        className='relative inline-flex'
-        onClick={() => setState({ isAutorotate: !isAutorotate })}
+        className='relative inline-flex hover:cursor-pointer'
+        onClick={() => setState({ isAutoRotate: !isAutoRotate })}
       >
         <Image
           alt='360'

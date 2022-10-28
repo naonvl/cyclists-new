@@ -11,16 +11,10 @@ interface Props {
   onTouch?: (e: TouchEvent) => void
   controlsRef: MutableRefObject<OrbitControls>
   groupRef: MutableRefObject<Group>
-  textureRef: MutableRefObject<Texture>
   canvasRef: MutableRefObject<Canvas>
 }
 
-const useFirstRenderModel = ({
-  controlsRef,
-  groupRef,
-  canvasRef,
-  textureRef,
-}: Props) => {
+const useFirstRenderModel = ({ controlsRef, groupRef, canvasRef }: Props) => {
   const setupInitialLoad = useCallback(async () => {
     const reqVariants = await fetch('/api/products', { method: 'GET' })
     const resVariants = await reqVariants.json()
@@ -30,7 +24,7 @@ const useFirstRenderModel = ({
       variants: resVariants.variants,
       price: Number(defaultPrice),
     })
-    setState({ isLoading: false, firstLoadCanvas: false })
+    setState({ isLoading: false, firstLoadTexture: true, isSpringActive: true })
   }, [])
   useEffect(() => {
     if (

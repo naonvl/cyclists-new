@@ -22,8 +22,9 @@ import StepNavigation from '@/components/dom/StepNavigation'
 import useFirstRender from '@/components/hooks/useFirstRender'
 import FormOrder from '@/components/dom/FormOrder'
 import Overlay from '@/components/dom/Overlay'
-import FlipControls from '@/components/canvas/FlipControls'
+import FlipControls from '@/components/dom/FlipControls'
 import PriceTag from '@/components/dom/PriceTag'
+import Features from '@/components/dom/PriceTag'
 
 import Link from 'next/link'
 import loadSvg from '@/helpers/loadSvg'
@@ -75,15 +76,7 @@ const CustomerPage = (props) => {
               <DropdownControls />
             </div>
             <div className='relative'>
-              <FlipControls />
-
-              <button
-                type='button'
-                className='absolute z-30 inline-flex text-sm font-bold text-gray-800 uppercase bg-white cursor-pointer gap-1 top-[1rem] right-[4rem]'
-              >
-                <ArrowDownTrayIcon className='w-5 h-5 text-gray-800' />
-                <span>save</span>
-              </button>
+              <Features componentLoading={isLoading} />
               {isAddText ? (
                 <div className='absolute w-[60%] top-[24rem] left-3 z-[100]'>
                   <Text className='px-3 py-4 text-white bg-pink-500'>
@@ -152,15 +145,8 @@ const CustomerPage = (props) => {
             <DropdownControls componentLoading={isLoading} />
           </div>
           <div className='relative'>
-            <FlipControls />
+            <Features componentLoading={isLoading} />
 
-            <button
-              type='button'
-              className='absolute z-30 inline-flex text-sm font-bold text-gray-800 uppercase bg-white cursor-pointer gap-1 top-[1rem] right-[4rem]'
-            >
-              <ArrowDownTrayIcon className='w-5 h-5 text-gray-800' />
-              <span>save</span>
-            </button>
             {isAddText ? (
               <div className='absolute w-[45%] top-[24rem] left-3 z-[100]'>
                 <Text className='px-3 py-4 text-white bg-pink-500'>
