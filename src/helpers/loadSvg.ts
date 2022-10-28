@@ -7,13 +7,15 @@ interface SVGData extends fabric.Object {
   id: string
 }
 
-interface Props extends ICanvas, ITexture {}
+interface Props extends ICanvas, ITexture {
+  texturePath: number
+}
 
-const loadSvg = ({ canvasRef, textureRef }: Props) => {
+const loadSvg = ({ canvasRef, textureRef, texturePath }: Props) => {
   console.log('RUNNING LOAD SVG')
   const path: string = getState().isMobileVersion
-    ? `/textures/Jersey_COLOR${getState().texturePath}-mobile.svg`
-    : `/textures/Jersey_COLOR${getState().texturePath}.svg`
+    ? `/textures/Jersey_COLOR${texturePath}-mobile.svg`
+    : `/textures/Jersey_COLOR${texturePath}.svg`
 
   let svgData: fabric.Object | fabric.Group = null
   let currentColors: Array<{ id: any; fill: any }> = []
@@ -28,7 +30,7 @@ const loadSvg = ({ canvasRef, textureRef }: Props) => {
 
     svgData.top = 0
     svgData.left = 0
-    svgData.name = `Jersey_COLOR${getState().texturePath}`
+    svgData.name = `Jersey_COLOR${texturePath}`
 
     for (let i = 0; i < objects.length; i++) {
       currentColors.push({
@@ -64,6 +66,7 @@ const loadSvg = ({ canvasRef, textureRef }: Props) => {
       textureRef.current.needsUpdate = true
 
       setState({
+        changed: true,
         svgGroup: svgData,
         colors: currentColors,
       })

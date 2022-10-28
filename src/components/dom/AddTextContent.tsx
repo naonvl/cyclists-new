@@ -4,6 +4,7 @@ import Dropdowns from '@/components/dom/Dropdowns'
 import useStore, { setState, getState } from '@/helpers/store'
 import { fonts } from '@/constants'
 import { fabricControls } from '@/util/fabric'
+import { Texture } from 'three/src/textures/Texture'
 import { ICanvas, ITexture } from '@/interfaces'
 
 interface Props extends ICanvas, ITexture {}
@@ -42,9 +43,11 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
         [e.target.name]: e.target.value,
       },
     })
-    textureRef.current.needsUpdate = false
     canvasRef.current.renderAll()
-    // getState().flipCamera(getState().camera.position.z + 0.001)
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    setState({ changed: true })
   }
 
   const handleDecrement = (name: string) => {
@@ -59,9 +62,11 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
       },
       textChanged: true,
     })
-    textureRef.current.needsUpdate = false
     canvasRef.current.renderAll()
-    // getState().flipCamera(getState().camera.position.z + 0.001)
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    setState({ changed: true })
   }
 
   const handleIncrement = (name: string) => {
@@ -76,9 +81,11 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
       },
       textChanged: true,
     })
-    textureRef.current.needsUpdate = false
     canvasRef.current.renderAll()
-    // getState().flipCamera(getState().camera.position.z + 0.001)
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    setState({ changed: true })
   }
 
   const { text, fontFamily, fill, fontSize, angle, stroke, strokeWidth } =

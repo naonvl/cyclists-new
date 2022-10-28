@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useLayoutEffect } from 'react'
 import getWindowDimensions from '@/helpers/getWindowDimensions'
 import { getState, setState } from '@/helpers/store'
 import loadSvg from '@/helpers/loadSvg'
@@ -24,14 +24,14 @@ const useFirstRender = ({ canvasRef, textureRef }: Props) => {
 
     canvasRef.current = fabricCanvas
 
-    loadSvg({ canvasRef, textureRef })
+    loadSvg({ canvasRef, textureRef, texturePath: 1 })
 
     setState({
       firstLoadCanvas: true,
     })
   }, [canvasRef, textureRef])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!getState().firstLoadCanvas && getState().isLoading) {
       console.log('[DOM] First render!')
       setupInitialLoad()

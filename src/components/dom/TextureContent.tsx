@@ -6,6 +6,7 @@ import { jerseyStyles } from '@/constants'
 import loadSvg from '@/helpers/loadSvg'
 import { Texture } from 'three/src/textures/Texture'
 import { ICanvas, ITexture } from '@/interfaces'
+import { Dispatch, SetStateAction } from 'react'
 
 interface Props extends ICanvas, ITexture {}
 
@@ -25,10 +26,8 @@ const TextureContent = ({ canvasRef, textureRef }: Props) => {
   ])
 
   const handleChangeTexture = (index: number) => {
-    setState({
-      texturePath: index + 1,
-    })
-    loadSvg({ canvasRef, textureRef })
+    loadSvg({ canvasRef, textureRef, texturePath: index + 1 })
+    setState({ texturePath: index + 1 })
   }
 
   return (

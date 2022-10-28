@@ -1,5 +1,5 @@
 import { getState, setState } from '@/helpers/store'
-import { MutableRefObject, useCallback, useEffect } from 'react'
+import { MutableRefObject, useCallback, useLayoutEffect } from 'react'
 import type { OrbitControls } from 'three-stdlib'
 import { Texture } from 'three/src/textures/Texture'
 import type { Group } from 'three/src/objects/Group'
@@ -38,7 +38,7 @@ const useFirstRenderModel = ({
 
     setState({ isLoading: false, firstLoadCanvas: false })
   }, [canvasRef, textureRef])
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       canvasRef.current &&
       !getState().firstLoadTexture &&

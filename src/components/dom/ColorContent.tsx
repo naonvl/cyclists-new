@@ -3,6 +3,7 @@ import Text from '@/components/dom/Text'
 import Color from '@/components/dom/Color'
 import useStore, { setState } from '@/helpers/store'
 import { ICanvas, ITexture } from '@/interfaces'
+import { Texture } from 'three/src/textures/Texture'
 
 interface Props extends ICanvas, ITexture {}
 
@@ -27,8 +28,11 @@ const ColorContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
       .remove(canvasRef.current._objects[0])
       .add(svgGroup)
       .sendToBack(svgGroup)
+      .renderAll()
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
-    canvasRef.current.renderAll()
+    setState({ changed: true })
     // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 

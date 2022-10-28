@@ -1,10 +1,13 @@
 import { fabric } from 'fabric'
 import { getState, setState } from '@/helpers/store'
 import { ICanvas, ITexture } from '@/interfaces'
+import { Vector2 } from 'three/src/math/Vector2'
 
-interface Props extends ICanvas, ITexture {}
+interface Props extends ICanvas, ITexture {
+  ray: Vector2
+}
 
-const addText = ({ canvasRef, textureRef }: Props) => {
+const addText = ({ canvasRef, textureRef, ray }: Props) => {
   const jerseyText = new fabric.IText(getState().insertText, {
     text: getState().insertText,
     fontFamily: 'Arial',
@@ -15,8 +18,8 @@ const addText = ({ canvasRef, textureRef }: Props) => {
     strokeWidth: 0,
     textAlign: 'center',
     fontWeight: 'bold',
-    left: getState().ray.x * getState().dimensions.width,
-    top: getState().ray.y * getState().dimensions.height,
+    left: ray.x * getState().dimensions.width,
+    top: ray.y * getState().dimensions.height,
     originX: 'center',
     originY: 'center',
     hasRotatingPoint: false,

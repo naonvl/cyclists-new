@@ -1,4 +1,4 @@
-import React, { MutableRefObject } from 'react'
+import React, { MutableRefObject, useMemo } from 'react'
 import { Texture } from 'three/src/textures/Texture'
 import type { Canvas } from 'fabric/fabric-impl'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
@@ -9,8 +9,10 @@ import { useRef, useEffect, useCallback } from 'react'
 import { getPositionPointer, getPositionTouch } from '@/helpers/getPositions'
 import useFirstRenderModel from '@/components/hooks/useFirstRenderModel'
 import type { Group } from 'three/src/objects/Group'
+import { Vector, Vector2 } from 'three/src/math/Vector2'
 import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
 import FlipControls from '@/components/canvas/FlipControls'
+import { fabric } from 'fabric'
 
 import {
   useGLTF,
@@ -20,6 +22,7 @@ import {
   AdaptiveEvents,
   Stats,
 } from '@react-three/drei'
+import addText from '@/helpers/addText'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -54,13 +57,16 @@ const ShirtComponent = ({
   const { nodes, materials } = useGLTF(
     '/model/n-cycling-jersey.drc.glb'
   ) as unknown as GLTFResult
-  const { camera, gl, pointer, mouse, raycaster, scene } = useThree()
+  const { camera, gl, raycaster, scene } = useThree()
 
+  const inputRef = React.useRef(null)
+  const ray = useRef<Vector>()
   const canvasRenderedRef = useRef<HTMLCanvasElement>(
     document.getElementsByTagName('canvas')[0]
   )
-
-  const inputRef = React.useRef(null)
+  const changed = useStore((state) => state.changed)
+  const isAddText = useStore((state) => state.isAddText)
+  const dimensions = useStore((state) => state.dimensions)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -68,58 +74,7 @@ const ShirtComponent = ({
   const [aoMapzipp] = useLoader(TextureLoader, ['/textures/ao_zip.png'])
   const [bump] = useLoader(TextureLoader, ['/textures/DisplacementMap.jpg'])
 
-  // const handleClick = useCallback(
-  //   (e: MouseEvent) => {
-  //     const rect = canvasRenderedRef.current.getBoundingClientRect()
-  //     const positionOnScene = getPositionPointer(
-  //       e,
-  //       rect,
-  //       pointer,
-  //       mouse,
-  //       raycaster,
-  //       scene,
-  //       camera
-  //     )
-  //     if (positionOnScene) {
-  //       const canvasRect = canvasRef.current.getCenter()
-  //       const simEvt = new globalThis.MouseEvent(e.type, {
-  //         clientX: canvasRect.left + positionOnScene.x,
-  //         clientY: canvasRect.top + positionOnScene.y,
-  //       })
-
-  //       canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-  //     }
-  //   },
-  //   [camera, mouse, pointer, raycaster, scene]
-  // )
-
-  // const handleTouch = useCallback(
-  //   (e: TouchEvent) => {
-  //     const rect = canvasRenderedRef.current.getBoundingClientRect()
-  //     const positionOnScene = getPositionTouch(
-  //       e,
-  //       rect,
-  //       pointer,
-  //       mouse,
-  //       raycaster,
-  //       scene,
-  //       camera
-  //     )
-  //     if (positionOnScene) {
-  //       const canvasRect = canvasRef.current.getCenter()
-  //       const simEvt = new globalThis.MouseEvent(e.type, {
-  //         clientX: canvasRect.left + positionOnScene.x,
-  //         clientY: canvasRect.top + positionOnScene.y,
-  //       })
-
-  //       canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-  //     }
-  //   },
-  //   [camera, mouse, pointer, raycaster, scene]
-  // )
-
   useFirstRenderModel({
-    // onClick: handleClick,
     // onTouch: handleTouch,
     controlsRef,
     groupRef,
@@ -127,28 +82,18 @@ const ShirtComponent = ({
     textureRef,
   })
 
-  // useEffect(() => {
-  //   setState({ camera: camera })
-  // }, [camera])
-
   useEffect(() => {
-    //   textureRef.current.needsUpdate = true
-    //   canvasRef.current.renderAll()
+    if (changed) {
+      console.log(changed)
+      camera.position.setZ(camera.position.z + 0.001)
+      setState({ changed: false })
+    }
+
     canvasRef.current.on('mouse:down', (e: any) => {
       const indexObject = canvasRef.current.getObjects().indexOf(e.target)
       const activeObject = canvasRef.current.getActiveObject()
-      // if (
-      //   getState().canvas._iTextInstances &&
-      //   getState().canvas._iTextInstances.length > 0
-      // ) {
-      //   getState().canvas.sete
-      //   getState().canvas.setActiveObject(
-      //     getState().canvas._iTextInstances[indexActiveObject]
-      //   )
-      // }
       if (e.target && e.target.text) {
-        // state.activeText = state.canvas.getActiveObject()
-        // state.editText = true
+        console.log(e.target.text)
         setState({
           indexActiveText: indexObject,
           activeText: activeObject,
@@ -165,17 +110,31 @@ const ShirtComponent = ({
         controlsRef.current.enabled = true
       }
     })
-  })
+  }, [camera.position, canvasRef, changed, controlsRef])
 
   useFrame((state) => {
     controlsRef.current.update()
+
     // setZoom(Math.floor(state.camera.position.z))
   })
 
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
     <>
-      <group ref={groupRef} dispose={null} {...props}>
+      <group
+        ref={groupRef}
+        dispose={null}
+        onBeforeRender={(e) => {}}
+        onPointerDown={(e) => {
+          e.stopPropagation()
+
+          ray.current = e.intersections[0].uv
+          if (isAddText) {
+            addText({ canvasRef, textureRef, ray: e.intersections[0].uv })
+          }
+        }}
+        {...props}
+      >
         <mesh
           geometry={nodes.M740158_mesh_in.geometry}
           material={materials['Material.016']}

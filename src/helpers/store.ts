@@ -10,6 +10,7 @@ import type { PerspectiveCamera } from 'three/src/cameras/PerspectiveCamera'
 import { IVariants } from '@/interfaces'
 
 interface State {
+  changed: boolean
   isMobileVersion: boolean
   firstLoadTexture: boolean
   firstLoadCanvas: boolean
@@ -80,6 +81,7 @@ interface State {
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
+  changed: false,
   dropdownStepOpen: 1,
   firstLoadTexture: false,
   firstLoadCanvas: false,

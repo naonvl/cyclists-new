@@ -5,20 +5,18 @@ import {
   FC,
   useRef,
   useMemo,
+  MutableRefObject,
   useCallback,
   MouseEvent,
-  MutableRefObject,
   useEffect,
 } from 'react'
 import { Environment, Preload } from '@react-three/drei'
-import useStore, { setState } from '@/helpers/store'
 import Loader from '@/components/canvas/Loader'
 import { initPatch } from '@/helpers/patch'
-import addText from '@/helpers/addText'
 import { Canvas } from '@react-three/fiber'
-import { getPositionPointer } from '@/helpers/getPositions'
+import useStore, { setState } from '@/helpers/store'
 import type { Canvas as FabriCanvas } from 'fabric/fabric-impl'
-import type { Texture } from 'three/src/textures/Texture'
+import { Texture } from 'three/src/textures/Texture'
 
 interface CanvasProps {
   children?: React.ReactNode
@@ -36,25 +34,7 @@ const LCanvas: FC<CanvasProps> = ({
   ...props
 }) => {
   const canvasRenderedRef = useRef<HTMLCanvasElement>()
-  const {
-    isAddText,
-    canvas,
-    dimensions,
-    activeText,
-    ray,
-    allText,
-    inserText,
-    camera,
-  } = useStore((state) => ({
-    isAddText: state.isAddText,
-    canvas: state.canvas,
-    dimensions: state.dimensions,
-    activeText: state.activeText,
-    ray: state.ray,
-    allText: state.allText,
-    insertText: state.insertText,
-    camera: state.camera,
-  }))
+  const dimensions = useStore((state) => state.dimensions)
   const [threeProps, setThreeProps] = useState({
     camera: null,
     pointer: null,
@@ -63,6 +43,7 @@ const LCanvas: FC<CanvasProps> = ({
     mouse: null,
     gl: null,
   })
+
   const memoizedInitPatch = useMemo(() => {
     initPatch({ threeProps, canvasRenderedRef, canvasRef, textureRef })
   }, [canvasRef, textureRef, threeProps])
@@ -88,13 +69,11 @@ const LCanvas: FC<CanvasProps> = ({
 
       if (intersects.length > 0 && intersects[0].uv) {
         let uv = intersects[0].uv
-        setState({
-          ray: {
-            x: uv.x,
-            y: uv.y,
-            z: 0,
-          },
-        })
+        canvasRef.current.renderAll()
+        textureRef.current = new Texture(canvasRef.current.getElement())
+        textureRef.current.flipY = false
+        textureRef.current.needsUpdate = true
+        setState({ changed: true })
         const positionOnScene = {
           x: Math.round(uv.x * dimensions.width) - 4.5,
           y: Math.round(uv.y * dimensions.height) - 5.5,
@@ -114,7 +93,7 @@ const LCanvas: FC<CanvasProps> = ({
         canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
       }
     },
-    [canvasRef, dimensions, threeProps]
+    [canvasRef, dimensions, textureRef, threeProps]
   )
 
   return (
@@ -127,18 +106,46 @@ const LCanvas: FC<CanvasProps> = ({
       gl={{
         antialias: true,
       }}
-      onClick={(e) => {
-        if (isAddText) {
-          addText({ canvasRef, textureRef })
-        }
-      }}
-      // onTouchStart={() => memoizedInitPatch}
       onMouseDown={(e) => {
         memoizedInitPatch
-        handleClick(e)
       }}
-      onCreated={({ camera, pointer, scene, raycaster, gl, mouse }) => {
+      onCreated={({ events, camera, pointer, scene, raycaster, gl, mouse }) => {
         setThreeProps({ camera, pointer, scene, raycaster, gl, mouse })
+
+        canvasRenderedRef.current.addEventListener('mousedown', (e) => {
+          const rect = canvasRenderedRef.current.getBoundingClientRect()
+          const array = [
+            (e.clientX - rect.left) / rect.width,
+            (e.clientY - rect.top) / rect.height,
+          ]
+          pointer.fromArray(array)
+          // Get intersects
+          mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+          raycaster.setFromCamera(mouse, camera)
+          const intersects = raycaster.intersectObjects(scene.children)
+          // getState().updateTexture()
+
+          if (intersects.length > 0 && intersects[0].uv) {
+            let uv = intersects[0].uv
+            canvasRef.current.renderAll()
+            textureRef.current = new Texture(canvasRef.current.getElement())
+            textureRef.current.flipY = false
+            textureRef.current.needsUpdate = true
+            setState({ changed: true })
+            const positionOnScene = {
+              x: Math.round(uv.x * dimensions.width) - 4.5,
+              y: Math.round(uv.y * dimensions.height) - 5.5,
+            }
+
+            const canvasRect = canvasRef.current.getCenter()
+            const simEvt = new globalThis.MouseEvent(e.type, {
+              clientX: canvasRect.left + positionOnScene.x,
+              clientY: canvasRect.top + positionOnScene.y,
+            })
+
+            canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+          }
+        })
       }}
       id='rendered'
       {...props}

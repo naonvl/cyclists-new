@@ -1,6 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, ChangeEvent } from 'react'
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
 import useStore, { getState, setState } from '@/helpers/store'
 
@@ -24,6 +24,11 @@ import FormOrder from '@/components/dom/FormOrder'
 import Overlay from '@/components/dom/Overlay'
 import FlipControls from '@/components/canvas/FlipControls'
 import PriceTag from '@/components/dom/PriceTag'
+import cn from 'clsx'
+import InputNumber from '@/components/dom/InputNumber'
+import canvasToSVG from '@/helpers/canvasToSVG'
+import generateTag from '@/helpers/generateTag'
+import { ICanvas } from '@/interfaces'
 
 import Link from 'next/link'
 import loadSvg from '@/helpers/loadSvg'
@@ -32,6 +37,12 @@ import { initFabricCanvas } from '@/util/fabric'
 
 interface SVGData extends fabric.Object {
   id: string
+}
+
+type FormDataType = {
+  quantity: number
+  size: string
+  variantID: number
 }
 
 // Dynamic import is used to prevent a payload when the website start that will include threejs r3f etc..
@@ -62,6 +73,78 @@ const CustomerPage = (props) => {
   )
   const cancelModalTextRef = useRef(null)
   const [openTextModal, setOpenTextModal] = useState(false)
+  const [variants] = useStore((state) => [state.variants])
+  const tagRef = useRef<string>(generateTag())
+
+  const [formData, setFormData] = useState<FormDataType>({
+    quantity: 1,
+    size: 'S',
+    variantID: 42808925978823,
+  })
+  const [formLoading, setIsLoading] = useState<boolean>(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    setIsLoading(true)
+    const encodedData = canvasToSVG(canvasRef.current)
+
+    const requestCreateOrder = await fetch('/api/createorder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...formData,
+        userId: props.cid,
+        attachment: encodedData,
+      }),
+    })
+    const responseOrder = await requestCreateOrder.json()
+
+    if (responseOrder && responseOrder.success) {
+      return setIsLoading(false)
+    }
+
+    return setIsLoading(false)
+  }
+
+  const handleChangeForm = (
+    e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
+  ) => {
+    if (e.target.name === 'id') {
+      setFormData({
+        ...formData,
+        size: variants[
+          variants.map((e: any) => e.id).indexOf(Number(e.target.value))
+        ].option2,
+      })
+      setState({
+        price: Number(
+          variants[variants.map((e) => e.id).indexOf(Number(e.target.value))]
+            .price
+        ),
+      })
+    }
+
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const decrementAction = () => {
+    if (formData.quantity == 1) {
+      return setFormData({ ...formData, quantity: 1 })
+    }
+
+    setState({
+      quantity: formData.quantity - 1,
+    })
+    return setFormData({ ...formData, quantity: formData.quantity - 1 })
+  }
+
+  const incrementAction = () => {
+    setState({
+      quantity: formData.quantity + 1,
+    })
+    return setFormData({ ...formData, quantity: formData.quantity + 1 })
+  }
 
   useFirstRender({ canvasRef, textureRef })
 
@@ -114,13 +197,11 @@ const CustomerPage = (props) => {
           <div className='mt-5 mb-3'>
             <StepControls />
           </div>
-
           <div className='mt-4 mb-1'>
             <TextureContent canvasRef={canvasRef} textureRef={textureRef} />
             <ColorContent canvasRef={canvasRef} textureRef={textureRef} />
             <AddTextContent canvasRef={canvasRef} textureRef={textureRef} />
           </div>
-
           <div className='mb-3'>
             <div className='p-3 bg-pink-200'>
               <Text className='text-xs font-bold text-black uppercase'>
@@ -131,16 +212,71 @@ const CustomerPage = (props) => {
               </Text>
             </div>
           </div>
-
           <div className='my-2'>
             <StepNavigation />
           </div>
-
-          <FormOrder
-            canvasRef={canvasRef}
-            cid={props.cid}
-            componentLoading={isLoading}
-          />
+          {isLoading ? (
+            <div>
+              <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
+                <div className='bg-gray-300 animate-pulse w-[120px] h-[45px]' />
+                <div className='bg-gray-300 animate-pulse w-[120px] h-[45px]' />
+                <div className='bg-gray-300 animate-pulse w-[366px] h-[45px]' />
+              </div>
+            </div>
+          ) : (
+            <form
+              action='https://cyclists.com/cart/add'
+              method='POST'
+              target='_blank'
+              onSubmit={handleSubmit}
+            >
+              <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
+                <div className='flex w-full gap-2'>
+                  <InputNumber
+                    rootClass='w-full lg:w-auto'
+                    id='totalOrder'
+                    name='quantity'
+                    type='number'
+                    onChange={handleChangeForm}
+                    value={formData.quantity}
+                    min={1}
+                    decrementAction={decrementAction}
+                    incrementAction={incrementAction}
+                    count={formData.quantity}
+                  />
+                  <select
+                    defaultValue={42808925978823}
+                    onChange={handleChangeForm}
+                    name='id'
+                    className='relative flex items-stretch w-full h-auto text-black bg-white border lg:w-auto py-[0.65rem] border-1 rounded-[0.10rem] md:items-center md:my-auto border-[#666]'
+                  >
+                    {variants.map((variant, index) => (
+                      <option value={variant.id} key={index}>
+                        {variant.option2}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type='submit'
+                  className={cn(
+                    'w-full px-4 text-center py-3 text-sm uppercase',
+                    {
+                      ['cursor-not-allowed bg-white text-black border border-black']:
+                        formLoading,
+                    },
+                    {
+                      ['bg-pink-600 border border-pink-600 text-white my-2 hover:border hover:border-black hover:bg-white hover:text-black']:
+                        !formLoading,
+                    }
+                  )}
+                  disabled={formLoading}
+                >
+                  {formLoading ? 'Loading...' : 'add to cart'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         <div className='block my-2 lg:hidden'>

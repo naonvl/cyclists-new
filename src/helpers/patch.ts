@@ -1,6 +1,7 @@
 import { MutableRefObject } from 'react'
 import { fabric } from 'fabric'
 import { getState, setState } from '@/helpers/store'
+import { Texture } from 'three/src/textures/Texture'
 import { ICanvas, ITexture } from '@/interfaces'
 
 interface Props extends ICanvas, ITexture {
@@ -71,9 +72,11 @@ export const initPatch = ({
       const intersects = raycaster.intersectObjects(scene.children)
       if (intersects.length > 0 && intersects[0].uv) {
         let uv = intersects[0].uv
-        setState({ ray: uv })
-        textureRef.current.needsUpdate = true
         canvasRef.current.renderAll()
+        textureRef.current = new Texture(canvasRef.current.getElement())
+        textureRef.current.flipY = false
+        textureRef.current.needsUpdate = true
+        setState({ changed: true })
 
         pointerFabric.x = Math.round(uv.x * getState().dimensions.width) - 4.5
         pointerFabric.y = Math.round(uv.y * getState().dimensions.height) - 5.5
