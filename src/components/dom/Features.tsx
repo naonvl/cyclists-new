@@ -8,8 +8,8 @@ interface FeaturesProps {
 const Features: React.FC<FeaturesProps> = ({ componentLoading }) => {
   return componentLoading ? (
     <>
-      <div className='w-6 h-4 bg-gray-300 animate-pulse' />
-      <div className='w-6 h-4 bg-gray-300 animate-pulse' />
+      <div className='absolute z-30 inline-flex w-6 h-4 px-2 text-sm font-bold text-gray-800 uppercase bg-gray-300 cursor-pointer animate-pulse gap-1 top-[1rem] right-[4rem]' />
+      <div className='absolute z-30 inline-flex w-6 h-4 px-2 text-sm font-bold text-gray-800 uppercase bg-gray-300 cursor-pointer animate-pulse gap-1 top-[1rem] right-[4rem]' />
     </>
   ) : (
     <>

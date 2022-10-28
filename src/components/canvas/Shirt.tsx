@@ -93,15 +93,19 @@ const ShirtComponent = ({
     canvasRef,
   })
 
+  useEffect(() => {
+    let timerActivateSpring = setTimeout(() =>
+      setState({ isSpringActive: true })
+    )
+
+    return () => {
+      clearTimeout(timerActivateSpring)
+    }
+  })
+
   const { rotation, position } = useSpring({
-    from: {
-      rotation: [0, 3, 0],
-      position: [0, -50, 0],
-    },
-    to: {
-      rotation: [0, 0, 0],
-      position: [0, 0, 0],
-    },
+    rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
+    position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
     // rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
     // position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
     config: config.slow,

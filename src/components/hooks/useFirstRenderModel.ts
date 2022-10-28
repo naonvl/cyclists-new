@@ -24,7 +24,7 @@ const useFirstRenderModel = ({ controlsRef, groupRef, canvasRef }: Props) => {
       variants: resVariants.variants,
       price: Number(defaultPrice),
     })
-    setState({ isLoading: false, firstLoadTexture: true, isSpringActive: true })
+    setState({ isLoading: false, firstLoadTexture: true })
   }, [])
   useEffect(() => {
     if (
