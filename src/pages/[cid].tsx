@@ -30,6 +30,7 @@ import Link from 'next/link'
 import loadSvg from '@/helpers/loadSvg'
 import { fabric } from 'fabric'
 import { initFabricCanvas } from '@/util/fabric'
+import { useSpring, config } from '@react-spring/three'
 
 interface SVGData extends fabric.Object {
   id: string
@@ -53,18 +54,32 @@ const CustomerPage = (props) => {
   const controlsRef = useRef<OrbitControls>(null)
   const groupRef = useRef<Group>(null)
 
-  const [isAddText, isLoading, isMobileVersion, dimensions] = useStore(
-    (state) => [
+  const [isAddText, isLoading, isMobileVersion, dimensions, isSpringActive] =
+    useStore((state) => [
       state.isAddText,
       state.isLoading,
       state.isMobileVersion,
       state.dimensions,
-    ]
-  )
+      state.isSpringActive,
+    ])
   const cancelModalTextRef = useRef(null)
   const [openTextModal, setOpenTextModal] = useState(false)
 
   useFirstRender({ canvasRef, textureRef })
+
+  const { rotation, position } = useSpring({
+    from: {
+      rotation: [0, 3, 0],
+      position: [0, -50, 0],
+    },
+    to: {
+      rotation: [0, 0, 0],
+      position: [0, 0, 0],
+    },
+    // rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
+    // position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
+    config: config.gentle,
+  })
 
   return (
     <>
@@ -99,6 +114,8 @@ const CustomerPage = (props) => {
                   textureRef,
                   controlsRef,
                   groupRef,
+                  rotation,
+                  position,
                 })}
               </LCanvas>
             ) : null}
@@ -170,6 +187,8 @@ const CustomerPage = (props) => {
                 textureRef,
                 controlsRef,
                 groupRef,
+                rotation,
+                position,
               })}
             </LCanvas>
           ) : null}
@@ -192,13 +211,22 @@ const CustomerPage = (props) => {
 
 // canvas components goes here
 // It will receive same props as CustomerPage component (from getStaticProps, etc.)
-CustomerPage.r3f = ({ canvasRef, textureRef, controlsRef, groupRef }) => (
+CustomerPage.r3f = ({
+  canvasRef,
+  textureRef,
+  controlsRef,
+  groupRef,
+  rotation,
+  position,
+}) => (
   <>
     <Shirt
       canvasRef={canvasRef}
       controlsRef={controlsRef}
       groupRef={groupRef}
       textureRef={textureRef}
+      rotation={rotation}
+      position={position}
     />
   </>
 )

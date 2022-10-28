@@ -50,6 +50,8 @@ interface ShirtProps {
   groupRef: MutableRefObject<Group>
   controlsRef: MutableRefObject<OrbitControlsImpl>
   textureRef: MutableRefObject<Texture>
+  rotation: any
+  position: any
   props?: JSX.IntrinsicElements['group']
 }
 
@@ -58,6 +60,8 @@ const ShirtComponent = ({
   groupRef,
   textureRef,
   controlsRef,
+  rotation,
+  position,
   props,
 }: ShirtProps) => {
   const { nodes, materials } = useGLTF(
@@ -91,24 +95,6 @@ const ShirtComponent = ({
     controlsRef,
     groupRef,
     canvasRef,
-  })
-
-  useEffect(() => {
-    let timerActivateSpring = setTimeout(() =>
-      setState({ isSpringActive: true })
-    )
-
-    return () => {
-      clearTimeout(timerActivateSpring)
-    }
-  })
-
-  const { rotation, position } = useSpring({
-    rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
-    position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
-    // rotation: isSpringActive ? [0, 0, 0] : [0, 3, 0],
-    // position: isSpringActive ? [0, 0, 0] : [0, -50, 0],
-    config: config.slow,
   })
 
   useEffect(() => {
@@ -154,7 +140,9 @@ const ShirtComponent = ({
     controlsRef,
     flipChanged,
     flipStatus,
+    groupRef,
     isAutoRotate,
+    isSpringActive,
   ])
 
   useFrame((state) => {
