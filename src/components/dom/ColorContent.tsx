@@ -33,7 +33,6 @@ const ColorContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
     textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
     setState({ changed: true })
-    // getState().flipCamera(getState().camera.position.z + 0.001)
   }
 
   return (

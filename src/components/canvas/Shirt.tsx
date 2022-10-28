@@ -9,16 +9,13 @@ import type { Canvas } from 'fabric/fabric-impl'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { TextureLoader } from 'three/src/loaders/TextureLoader'
 import { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import useStore, { getState, setState, subscribe } from '@/helpers/store'
-import { useRef, useEffect, useCallback } from 'react'
-import { getPositionPointer, getPositionTouch } from '@/helpers/getPositions'
+import useStore, { setState } from '@/helpers/store'
+import { useRef, useEffect } from 'react'
 import useFirstRenderModel from '@/components/hooks/useFirstRenderModel'
 import type { Group } from 'three/src/objects/Group'
-import { Vector, Vector2 } from 'three/src/math/Vector2'
-import type { MeshStandardMaterial } from 'three/src/materials/MeshStandardMaterial'
-import FlipControls from '@/components/dom/FlipControls'
-import { fabric } from 'fabric'
-import { useSpring, animated, config } from '@react-spring/three'
+import { Vector2 } from 'three/src/math/Vector2'
+
+import { animated } from '@react-spring/three'
 
 import {
   useGLTF,
@@ -70,13 +67,14 @@ const ShirtComponent = ({
   const { camera, gl, raycaster, scene } = useThree()
 
   const inputRef = React.useRef(null)
-  const ray = useRef<Vector>()
+  const ray = useRef<Vector2>()
   const changed = useStore((state) => state.changed)
   const isAddText = useStore((state) => state.isAddText)
   const flipChanged = useStore((state) => state.flipChanged)
   const flipStatus = useStore((state) => state.flipStatus)
   const isAutoRotate = useStore((state) => state.isAutoRotate)
   const isSpringActive = useStore((state) => state.isSpringActive)
+  const cameraControls = useStore((state) => state.cameraControls)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -99,7 +97,6 @@ const ShirtComponent = ({
 
   useEffect(() => {
     if (changed) {
-      camera.position.setZ(camera.position.z + 0.001)
       setState({ changed: false })
     }
 
@@ -111,6 +108,46 @@ const ShirtComponent = ({
     if (flipChanged && flipStatus == 'back') {
       camera.position.set(1, 1, -90)
       setState({ flipChanged: false })
+    }
+
+    if (cameraControls === 'zoom-out') {
+      const positionX = camera.position.x
+      const positionY = camera.position.y
+      const positionZ = camera.position.z
+      camera.position.set(positionX * 1.1, positionY * 1.1, positionZ * 1.1)
+      setState({ cameraControls: null })
+    }
+
+    if (cameraControls === 'zoom-in') {
+      const positionX = camera.position.x
+      const positionY = camera.position.y
+      const positionZ = camera.position.z
+      camera.position.set(positionX * 0.9, positionY * 0.9, positionZ * 0.9)
+      setState({ cameraControls: null })
+    }
+
+    if (cameraControls === 'rotate-right') {
+      const rotationX = groupRef.current.rotation.x
+      const rotationY = groupRef.current.rotation.y
+      const rotationZ = groupRef.current.rotation.z
+      groupRef.current.rotation.set(
+        rotationX,
+        rotationY + -Math.PI / 4,
+        rotationZ
+      )
+      setState({ cameraControls: null })
+    }
+
+    if (cameraControls === 'rotate-left') {
+      const rotationX = groupRef.current.rotation.x
+      const rotationY = groupRef.current.rotation.y
+      const rotationZ = groupRef.current.rotation.z
+      groupRef.current.rotation.set(
+        rotationX,
+        rotationY + Math.PI / 4,
+        rotationZ
+      )
+      setState({ cameraControls: null })
     }
 
     canvasRef.current.on('mouse:down', (e: any) => {
@@ -134,7 +171,8 @@ const ShirtComponent = ({
       }
     })
   }, [
-    camera.position,
+    camera,
+    cameraControls,
     canvasRef,
     changed,
     controlsRef,
@@ -147,6 +185,7 @@ const ShirtComponent = ({
 
   useFrame((state) => {
     controlsRef.current.update()
+    // groupRef.current.rotation.set(state.camera.position)
 
     if (state.camera.position.z < 0) {
       setState({ flipStatus: 'front' })
@@ -154,6 +193,7 @@ const ShirtComponent = ({
     if (state.camera.position.z > 0) {
       setState({ flipStatus: 'back' })
     }
+
     // setZoom(Math.floor(state.camera.position.z))
   })
 
@@ -168,6 +208,8 @@ const ShirtComponent = ({
         onPointerDown={(e) => {
           e.stopPropagation()
           // setIsClicked(true)
+          // console.log(e.intersections[0].point)
+          // console.log(camera.position)
 
           ray.current = e.intersections[0].uv
           if (isAddText) {

@@ -6,7 +6,7 @@ import ChevronDoubleUpIcon from '@heroicons/react/24/outline/ChevronDoubleUpIcon
 import EyeIcon from '@heroicons/react/24/outline/EyeIcon'
 import ZoomInIcon from '@heroicons/react/24/outline/MagnifyingGlassPlusIcon'
 import ZoomOutIcon from '@heroicons/react/24/outline/MagnifyingGlassMinusIcon'
-import useStore from '@/helpers/store'
+import useStore, { setState } from '@/helpers/store'
 import Image from '@/components/dom/Image'
 
 interface DropdownsProps {
@@ -21,10 +21,7 @@ const DropdownControls: React.FC<DropdownsProps> = ({
   componentLoading,
 }) => {
   const buttonRef = useRef(null)
-  const [zoomCamera, rotateControl] = useStore((state) => [
-    state.zoomCamera,
-    state.rotateControl,
-  ])
+  const cameraControls = useStore((state) => state.cameraControls)
   const [open, setOpen] = useState<boolean>(true)
 
   const rootClasses = cn(
@@ -76,14 +73,14 @@ const DropdownControls: React.FC<DropdownsProps> = ({
             <button
               type='button'
               className='flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
-              onClick={zoomCamera('in')}
+              onClick={() => setState({ cameraControls: 'zoom-in' })}
             >
               <ZoomInIcon className={cn('w-5 h-5')} />
             </button>
             <button
               type='button'
               className='flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
-              onClick={zoomCamera('out')}
+              onClick={() => setState({ cameraControls: 'zoom-out' })}
             >
               <ZoomOutIcon className={cn('w-5 h-5')} />
             </button>
@@ -92,7 +89,7 @@ const DropdownControls: React.FC<DropdownsProps> = ({
               className={cn(
                 'flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
               )}
-              onClick={rotateControl('toRight')}
+              onClick={() => setState({ cameraControls: 'rotate-right' })}
             >
               <Image
                 alt='Cyclists'
@@ -109,7 +106,7 @@ const DropdownControls: React.FC<DropdownsProps> = ({
               className={cn(
                 'flex items-center justify-center w-full p-2 overflow-hidden bg-gray-100 border-b border-l border-r border-gray-400 cursor-pointer'
               )}
-              onClick={rotateControl('toLeft')}
+              onClick={() => setState({ cameraControls: 'rotate-left' })}
             >
               <Image
                 alt='Cyclists'

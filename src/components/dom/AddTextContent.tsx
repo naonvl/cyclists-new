@@ -297,6 +297,7 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
                   type='color'
                   className='ml-[10px]'
                   value={stroke}
+                  name='stroke'
                   id='outlineColor'
                   onChange={handleChangeTextData}
                 />

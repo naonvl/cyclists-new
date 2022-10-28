@@ -82,9 +82,11 @@ interface State {
   isAutoRotate: boolean
   isSpringActive: boolean
   changeColor: (index: number, newColor: string) => void
+  cameraControls: 'zoom-in' | 'zoom-out' | 'rotate-right' | 'rotate-left'
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
+  cameraControls: null,
   isAutoRotate: false,
   isSpringActive: false,
   flipStatus: 'front',
