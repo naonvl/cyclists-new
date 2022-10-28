@@ -24,7 +24,7 @@ import FormOrder from '@/components/dom/FormOrder'
 import Overlay from '@/components/dom/Overlay'
 import FlipControls from '@/components/dom/FlipControls'
 import PriceTag from '@/components/dom/PriceTag'
-import Features from '@/components/dom/PriceTag'
+import Features from '@/components/dom/Features'
 
 import Link from 'next/link'
 import loadSvg from '@/helpers/loadSvg'
