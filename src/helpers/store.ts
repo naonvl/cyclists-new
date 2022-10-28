@@ -77,10 +77,14 @@ interface State {
   price: number
   isAddText: boolean
   indexActiveText: number
+  flipStatus: 'front' | 'back'
+  flipChanged: boolean
   changeColor: (index: number, newColor: string) => void
 }
 
 const useStoreImpl = create<State>()((set, get) => ({
+  flipStatus: 'front',
+  flipChanged: false,
   changed: false,
   dropdownStepOpen: 1,
   firstLoadTexture: false,

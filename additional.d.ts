@@ -1,4 +1,4 @@
-import { Canvas, Object } from 'fabric/fabric-impl'
+import { Canvas, Object, Group } from 'fabric/fabric-impl'
 
 declare module 'fabric/fabric-impl' {
   interface IActiveObject extends Object {

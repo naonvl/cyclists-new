@@ -33,7 +33,6 @@ const FormOrder: React.FC<FormOrderProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
     setIsLoading(true)
     const encodedData = canvasToSVG(canvasRef.current)
 

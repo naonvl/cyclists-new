@@ -163,9 +163,15 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
                           canvasRef.current._iTextInstances[index]
                         )
                         canvasRef.current.renderAll()
+                        canvasRef.current.renderAll()
+                        textureRef.current = new Texture(
+                          canvasRef.current.getElement()
+                        )
+                        textureRef.current.flipY = false
+                        textureRef.current.needsUpdate = true
                         setState({
                           allText: allText.filter((item) => item !== data),
-                          textChanged: true,
+                          changed: true,
                         })
                         // getState().flipCamera(
                         //   getState().camera.position.z + 0.001

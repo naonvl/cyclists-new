@@ -1,5 +1,5 @@
 import { getState, setState } from '@/helpers/store'
-import { MutableRefObject, useCallback, useLayoutEffect } from 'react'
+import { MutableRefObject, useCallback, useEffect } from 'react'
 import type { OrbitControls } from 'three-stdlib'
 import { Texture } from 'three/src/textures/Texture'
 import type { Group } from 'three/src/objects/Group'
@@ -30,36 +30,14 @@ const useFirstRenderModel = ({
       variants: resVariants.variants,
       price: Number(defaultPrice),
     })
-
-    textureRef.current = new Texture(canvasRef.current.getElement())
-    textureRef.current.flipY = false
-    textureRef.current.needsUpdate = true
-    canvasRef.current.renderAll()
-
     setState({ isLoading: false, firstLoadCanvas: false })
-  }, [canvasRef, textureRef])
-  useLayoutEffect(() => {
+  }, [])
+  useEffect(() => {
     if (
       canvasRef.current &&
       !getState().firstLoadTexture &&
       getState().isLoading
     ) {
-      console.log('[MODEL] First render!')
-      // if (!getState().isMobileVersion) {
-      //   document
-      //     .getElementsByTagName('canvas')[0]
-      //     .addEventListener('mousedown', (e) => {
-      //       onClick(e)
-      //     })
-      // }
-
-      // if (getState().isMobileVersion) {
-      //   document
-      //     .getElementsByTagName('canvas')[0]
-      //     .addEventListener('touchstart', (e) => {
-      //       onTouch(e)
-      //     })
-      // }
       setupInitialLoad()
     }
   }, [canvasRef, controlsRef, groupRef, setupInitialLoad])

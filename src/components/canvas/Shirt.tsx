@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useMemo } from 'react'
+import React, { MutableRefObject, useLayoutEffect, useMemo } from 'react'
 import { Texture } from 'three/src/textures/Texture'
 import type { Canvas } from 'fabric/fabric-impl'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
@@ -61,18 +61,23 @@ const ShirtComponent = ({
 
   const inputRef = React.useRef(null)
   const ray = useRef<Vector>()
-  const canvasRenderedRef = useRef<HTMLCanvasElement>(
-    document.getElementsByTagName('canvas')[0]
-  )
   const changed = useStore((state) => state.changed)
   const isAddText = useStore((state) => state.isAddText)
-  const dimensions = useStore((state) => state.dimensions)
+  const flipChanged = useStore((state) => state.flipChanged)
+  const flipStatus = useStore((state) => state.flipStatus)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
   const [aoMapout] = useLoader(TextureLoader, ['/textures/ao_out.png'])
   const [aoMapzipp] = useLoader(TextureLoader, ['/textures/ao_zip.png'])
   const [bump] = useLoader(TextureLoader, ['/textures/DisplacementMap.jpg'])
+
+  useLayoutEffect(() => {
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    canvasRef.current.renderAll()
+  }, [canvasRef, textureRef])
 
   useFirstRenderModel({
     // onTouch: handleTouch,
@@ -84,9 +89,18 @@ const ShirtComponent = ({
 
   useEffect(() => {
     if (changed) {
-      console.log(changed)
       camera.position.setZ(camera.position.z + 0.001)
       setState({ changed: false })
+    }
+
+    if (flipChanged && flipStatus == 'front') {
+      camera.position.set(-1, 1, 90)
+      setState({ flipChanged: false })
+    }
+
+    if (flipChanged && flipStatus == 'back') {
+      camera.position.set(1, 1, -90)
+      setState({ flipChanged: false })
     }
 
     canvasRef.current.on('mouse:down', (e: any) => {
@@ -110,11 +124,24 @@ const ShirtComponent = ({
         controlsRef.current.enabled = true
       }
     })
-  }, [camera.position, canvasRef, changed, controlsRef])
+  }, [
+    camera.position,
+    canvasRef,
+    changed,
+    controlsRef,
+    flipChanged,
+    flipStatus,
+  ])
 
   useFrame((state) => {
     controlsRef.current.update()
 
+    if (state.camera.position.z < 0) {
+      setState({ flipStatus: 'front' })
+    }
+    if (state.camera.position.z > 0) {
+      setState({ flipStatus: 'back' })
+    }
     // setZoom(Math.floor(state.camera.position.z))
   })
 
@@ -124,7 +151,6 @@ const ShirtComponent = ({
       <group
         ref={groupRef}
         dispose={null}
-        onBeforeRender={(e) => {}}
         onPointerDown={(e) => {
           e.stopPropagation()
 

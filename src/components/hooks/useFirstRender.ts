@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import getWindowDimensions from '@/helpers/getWindowDimensions'
 import { getState, setState } from '@/helpers/store'
 import loadSvg from '@/helpers/loadSvg'
 import { initFabricCanvas } from '@/util/fabric'
 import { ICanvas, ITexture } from '@/interfaces'
+import { Texture } from 'three/src/textures/Texture'
 
 interface Props extends ICanvas, ITexture {}
 
@@ -31,9 +32,8 @@ const useFirstRender = ({ canvasRef, textureRef }: Props) => {
     })
   }, [canvasRef, textureRef])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!getState().firstLoadCanvas && getState().isLoading) {
-      console.log('[DOM] First render!')
       setupInitialLoad()
     }
   }, [setupInitialLoad])
