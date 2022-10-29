@@ -152,31 +152,15 @@ const ShirtComponent = ({
     textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
     canvasRef.current.renderAll()
-
-    if (canvasRef.current && !textureRef.current) {
-      if (!isMobileVersion) {
-        document
-          .getElementsByTagName('canvas')[0]
-          .addEventListener('mousedown', (e) => {
-            handleClick(e)
-          })
-      }
-
-      if (isMobileVersion) {
-        document
-          .getElementsByTagName('canvas')[0]
-          .addEventListener('touchstart', (e) => {
-            handleClick(e)
-          })
-      }
-      canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
-    }
+    canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
   }, [canvasRef, handleClick, isMobileVersion, textureRef])
 
   useFirstRenderModel({
     controlsRef,
     groupRef,
     canvasRef,
+    handleClick,
+    textureRef,
   })
 
   useEffect(() => {
