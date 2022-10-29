@@ -1,5 +1,6 @@
 import React, {
   MutableRefObject,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useState,
@@ -64,17 +65,20 @@ const ShirtComponent = ({
   const { nodes, materials } = useGLTF(
     '/model/n-cycling-jersey.drc.glb'
   ) as unknown as GLTFResult
-  const { camera, gl, raycaster, scene } = useThree()
+  const { camera, gl, raycaster, scene, mouse, pointer } = useThree()
 
   const inputRef = React.useRef(null)
   const ray = useRef<Vector2>()
+  const canvasRenderedRef = useRef<HTMLCanvasElement>()
   const changed = useStore((state) => state.changed)
   const isAddText = useStore((state) => state.isAddText)
-  const flipChanged = useStore((state) => state.flipChanged)
   const flipStatus = useStore((state) => state.flipStatus)
+  const dimensions = useStore((state) => state.dimensions)
+  const flipChanged = useStore((state) => state.flipChanged)
   const isAutoRotate = useStore((state) => state.isAutoRotate)
   const isSpringActive = useStore((state) => state.isSpringActive)
   const cameraControls = useStore((state) => state.cameraControls)
+  const isMobileVersion = useStore((state) => state.isMobileVersion)
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
@@ -82,12 +86,92 @@ const ShirtComponent = ({
   const [aoMapzipp] = useLoader(TextureLoader, ['/textures/ao_zip.png'])
   const [bump] = useLoader(TextureLoader, ['/textures/DisplacementMap.jpg'])
 
+  const getPosition = useCallback(
+    (e) => {
+      const rect = canvasRenderedRef.current.getBoundingClientRect()
+      let clientSize = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+      }
+      if (e.changedTouches) {
+        clientSize = {
+          clientX: e.changedTouches[0].clientX,
+          clientY: e.changedTouches[0].clientY,
+        }
+      }
+      const array = [
+        (clientSize.clientX - rect.left) / rect.width,
+        (clientSize.clientY - rect.top) / rect.height,
+      ]
+      pointer.fromArray(array)
+      // Get intersects
+      mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
+      raycaster.setFromCamera(mouse, camera)
+      const intersects = raycaster.intersectObjects(scene.children)
+      textureRef.current.needsUpdate = true
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        let uv = intersects[0].uv
+        return {
+          x: Math.round(uv.x * dimensions.width) - 4.5,
+          y: Math.round(uv.y * dimensions.height) - 5.5,
+        }
+      }
+      return null
+    },
+    [
+      pointer,
+      mouse,
+      raycaster,
+      camera,
+      scene.children,
+      textureRef,
+      dimensions.width,
+      dimensions.height,
+    ]
+  )
+
+  const handleClick = useCallback(
+    (e) => {
+      const positionOnScene = getPosition(e)
+      if (positionOnScene) {
+        const canvasRect = canvasRef.current.getCenter()
+        const simEvt = new globalThis.MouseEvent(e.type, {
+          clientX: canvasRect.left + positionOnScene.x,
+          clientY: canvasRect.top + positionOnScene.y,
+        })
+
+        canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
+      }
+    },
+    [canvasRef, getPosition]
+  )
+
   useLayoutEffect(() => {
     textureRef.current = new Texture(canvasRef.current.getElement())
     textureRef.current.flipY = false
     textureRef.current.needsUpdate = true
     canvasRef.current.renderAll()
-  }, [canvasRef, textureRef])
+
+    if (canvasRef.current && !textureRef.current) {
+      if (!isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('mousedown', (e) => {
+            handleClick(e)
+          })
+      }
+
+      if (isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('touchstart', (e) => {
+            handleClick(e)
+          })
+      }
+      canvasRenderedRef.current = document.getElementsByTagName('canvas')[0]
+    }
+  }, [canvasRef, handleClick, isMobileVersion, textureRef])
 
   useFirstRenderModel({
     controlsRef,
@@ -149,6 +233,24 @@ const ShirtComponent = ({
       )
       setState({ cameraControls: null })
     }
+  }, [
+    camera.position,
+    cameraControls,
+    changed,
+    flipChanged,
+    flipStatus,
+    groupRef,
+  ])
+
+  useFrame((state) => {
+    controlsRef.current.update()
+
+    if (state.camera.position.z < 0) {
+      setState({ flipStatus: 'front' })
+    }
+    if (state.camera.position.z > 0) {
+      setState({ flipStatus: 'back' })
+    }
 
     canvasRef.current.on('mouse:down', (e: any) => {
       const indexObject = canvasRef.current.getObjects().indexOf(e.target)
@@ -166,35 +268,9 @@ const ShirtComponent = ({
           indexActiveText: 0,
         })
         canvasRef.current.discardActiveObject(e)
-        // getState().resetActiveText()
         controlsRef.current.enabled = true
       }
     })
-  }, [
-    camera,
-    cameraControls,
-    canvasRef,
-    changed,
-    controlsRef,
-    flipChanged,
-    flipStatus,
-    groupRef,
-    isAutoRotate,
-    isSpringActive,
-  ])
-
-  useFrame((state) => {
-    controlsRef.current.update()
-    // groupRef.current.rotation.set(state.camera.position)
-
-    if (state.camera.position.z < 0) {
-      setState({ flipStatus: 'front' })
-    }
-    if (state.camera.position.z > 0) {
-      setState({ flipStatus: 'back' })
-    }
-
-    // setZoom(Math.floor(state.camera.position.z))
   })
 
   // Return the view, these are regular Threejs elements expressed in JSX
@@ -203,14 +279,10 @@ const ShirtComponent = ({
       <animated.group
         ref={groupRef}
         dispose={null}
-        rotation={rotation as any}
-        position={position as any}
+        rotation={isMobileVersion && (rotation as any)}
+        position={isMobileVersion && (position as any)}
         onPointerDown={(e) => {
           e.stopPropagation()
-          // setIsClicked(true)
-          // console.log(e.intersections[0].point)
-          // console.log(camera.position)
-
           ray.current = e.intersections[0].uv
           if (isAddText) {
             addText({ canvasRef, textureRef, ray: e.intersections[0].uv })

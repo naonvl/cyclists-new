@@ -107,45 +107,11 @@ const LCanvas: FC<CanvasProps> = ({
         antialias: true,
       }}
       onMouseDown={(e) => {
+        e.stopPropagation()
         memoizedInitPatch
       }}
-      onCreated={({ events, camera, pointer, scene, raycaster, gl, mouse }) => {
+      onCreated={({ camera, pointer, scene, raycaster, gl, mouse }) => {
         setThreeProps({ camera, pointer, scene, raycaster, gl, mouse })
-
-        canvasRenderedRef.current.addEventListener('mousedown', (e) => {
-          const rect = canvasRenderedRef.current.getBoundingClientRect()
-          const array = [
-            (e.clientX - rect.left) / rect.width,
-            (e.clientY - rect.top) / rect.height,
-          ]
-          pointer.fromArray(array)
-          // Get intersects
-          mouse.set(pointer.x * 2 - 1, -(pointer.y * 2) + 1)
-          raycaster.setFromCamera(mouse, camera)
-          const intersects = raycaster.intersectObjects(scene.children)
-          // getState().updateTexture()
-
-          if (intersects.length > 0 && intersects[0].uv) {
-            let uv = intersects[0].uv
-            canvasRef.current.renderAll()
-            textureRef.current = new Texture(canvasRef.current.getElement())
-            textureRef.current.flipY = false
-            textureRef.current.needsUpdate = true
-            setState({ changed: true })
-            const positionOnScene = {
-              x: Math.round(uv.x * dimensions.width) - 4.5,
-              y: Math.round(uv.y * dimensions.height) - 5.5,
-            }
-
-            const canvasRect = canvasRef.current.getCenter()
-            const simEvt = new globalThis.MouseEvent(e.type, {
-              clientX: canvasRect.left + positionOnScene.x,
-              clientY: canvasRect.top + positionOnScene.y,
-            })
-
-            canvasRef.current.getSelectionElement().dispatchEvent(simEvt)
-          }
-        })
       }}
       id='rendered'
       {...props}
