@@ -40,22 +40,20 @@ const useFirstRenderModel = ({
       !getState().firstLoadTexture &&
       getState().isLoading
     ) {
-      if (canvasRef.current && !textureRef.current) {
-        if (!getState().isMobileVersion) {
-          document
-            .getElementsByTagName('canvas')[0]
-            .addEventListener('mousedown', (e) => {
-              handleClick(e)
-            })
-        }
+      if (!getState().isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('mousedown', (e) => {
+            handleClick(e)
+          })
+      }
 
-        if (getState().isMobileVersion) {
-          document
-            .getElementsByTagName('canvas')[0]
-            .addEventListener('touchstart', (e) => {
-              handleClick(e)
-            })
-        }
+      if (getState().isMobileVersion) {
+        document
+          .getElementsByTagName('canvas')[0]
+          .addEventListener('touchstart', (e) => {
+            handleClick(e)
+          })
       }
       setupInitialLoad()
     }
