@@ -279,8 +279,8 @@ const ShirtComponent = ({
       <animated.group
         ref={groupRef}
         dispose={null}
-        rotation={isMobileVersion && (rotation as any)}
-        position={isMobileVersion && (position as any)}
+        rotation={!isMobileVersion && (rotation as any)}
+        position={!isMobileVersion && (position as any)}
         onPointerDown={(e) => {
           e.stopPropagation()
           ray.current = e.intersections[0].uv
