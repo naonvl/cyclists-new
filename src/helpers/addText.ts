@@ -2,6 +2,8 @@ import { fabric } from 'fabric'
 import { getState, setState } from '@/helpers/store'
 import { ICanvas, ITexture } from '@/interfaces'
 import { Vector2 } from 'three/src/math/Vector2'
+import { Texture } from 'three/src/textures/Texture'
+import { fabricControls } from '@/util/fabric'
 
 interface Props extends ICanvas, ITexture {
   ray: Vector2
@@ -24,7 +26,7 @@ const addText = ({ canvasRef, textureRef, ray }: Props) => {
     originY: 'center',
     hasRotatingPoint: false,
     selectable: true,
-    editable: true,
+    editable: false,
     centeredScaling: true,
   })
 
@@ -38,15 +40,17 @@ const addText = ({ canvasRef, textureRef, ray }: Props) => {
     })
     canvasRef.current.add(jerseyText)
     canvasRef.current.setActiveObject(jerseyText)
-    canvasRef.current.renderAll()
     setState({
       allText: [...getState().allText, getState().insertText],
       activeText: canvasRef.current.getActiveObject(),
       editText: true,
       isAddText: false,
     })
-    textureRef.current.needsUpdate = true
     canvasRef.current.renderAll()
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    setState({ changed: true })
     // getState().flipCamera(camera.position.z + 0.001)
   }
 }

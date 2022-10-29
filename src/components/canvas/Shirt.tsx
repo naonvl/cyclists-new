@@ -27,6 +27,8 @@ import {
   Stats,
 } from '@react-three/drei'
 import addText from '@/helpers/addText'
+import { fabricControls } from '@/util/fabric'
+import { initPatch } from '@/helpers/patch'
 
 type GLTFResult = GLTF & {
   nodes: {

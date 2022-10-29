@@ -10,19 +10,20 @@ import { ICanvas, ITexture } from '@/interfaces'
 interface Props extends ICanvas, ITexture {}
 
 const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
-  const [editText, allText, activeText, dropdownStepOpen] = useStore(
-    (state) => [
-      state.ediText,
-      state.allText,
-      state.activeText,
-      state.dropdownStepOpen,
-    ]
-  )
+  const editText = useStore((state) => state.editText)
+  const allText = useStore((state) => state.allText)
+  const activeText = useStore((state) => state.activeText)
+  const dropdownStepOpen = useStore((state) => state.dropdownStepOpen)
+  const indexActiveText = useStore((state) => state.indexActiveText)
+
   const handleCloseActiveText = () => {
     canvasRef.current.discardActiveObject()
     getState().resetActiveText()
-    textureRef.current.needsUpdate = false
     canvasRef.current.renderAll()
+    textureRef.current = new Texture(canvasRef.current.getElement())
+    textureRef.current.flipY = false
+    textureRef.current.needsUpdate = true
+    setState({ changed: true })
   }
   const handleChangeTextData = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>
@@ -30,8 +31,8 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
     canvasRef.current.getActiveObject().set<any>(e.target.name, e.target.value)
 
     if (e.target.name == 'text') {
-      let newAllText = [...getState().allText]
-      newAllText[getState().indexActiveText - 1] = e.target.value
+      let newAllText = [...allText]
+      newAllText[indexActiveText - 1] = e.target.value
       setState({
         allText: newAllText,
       })
@@ -39,7 +40,7 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
 
     setState({
       activeText: {
-        ...getState().activeText,
+        ...activeText,
         [e.target.name]: e.target.value,
       },
     })
@@ -51,13 +52,13 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
   }
 
   const handleDecrement = (name: string) => {
-    const currentValue = getState().activeText[name]
+    const currentValue = activeText[name]
     const value = currentValue - 1
     canvasRef.current.getActiveObject().set<any>(name, value)
 
     setState({
       activeText: {
-        ...getState().activeText,
+        ...activeText,
         [name]: value,
       },
       textChanged: true,
@@ -70,13 +71,13 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
   }
 
   const handleIncrement = (name: string) => {
-    const currentValue = getState().activeText[name]
+    const currentValue = activeText[name]
     const value = currentValue + 1
     canvasRef.current.getActiveObject().set<any>(name, value)
 
     setState({
       activeText: {
-        ...getState().activeText,
+        ...activeText,
         [name]: value,
       },
       textChanged: true,
@@ -100,7 +101,7 @@ const AddTextContent: React.FC<Props> = ({ canvasRef, textureRef }) => {
       menuClass='w-full'
       label='stepThree'
     >
-      {!getState().editText ? (
+      {!editText ? (
         <>
           <div className='flex flex-col w-full overflow-hidden'>
             <div className='mx-auto mb-2'>

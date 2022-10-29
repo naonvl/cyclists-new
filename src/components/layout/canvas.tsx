@@ -58,7 +58,7 @@ const LCanvas: FC<CanvasProps> = ({
       gl={{
         antialias: true,
       }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         e.stopPropagation()
         if (!isMobileVersion) {
           memoizedInitPatch
