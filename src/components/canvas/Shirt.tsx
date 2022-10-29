@@ -262,86 +262,168 @@ const ShirtComponent = ({
   // Return the view, these are regular Threejs elements expressed in JSX
   return (
     <>
-      <animated.group
-        ref={groupRef}
-        dispose={null}
-        rotation={!isMobileVersion && (rotation as any)}
-        position={!isMobileVersion && (position as any)}
-        onPointerDown={(e) => {
-          e.stopPropagation()
-          ray.current = e.intersections[0].uv
-          if (isAddText) {
-            addText({ canvasRef, textureRef, ray: e.intersections[0].uv })
-          }
-        }}
-        {...props}
-      >
-        <mesh
-          geometry={nodes.M740158_mesh_in.geometry}
-          material={materials['Material.016']}
-          scale={100}
+      {!isMobileVersion ? (
+        <animated.group
+          ref={groupRef}
+          dispose={null}
+          rotation={rotation as any}
+          position={position as any}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            ray.current = e.intersections[0].uv
+            if (isAddText) {
+              addText({ canvasRef, textureRef, ray: e.intersections[0].uv })
+            }
+          }}
+          {...props}
         >
-          <meshStandardMaterial
-            attach='material'
-            roughness={1}
-            emissive={1}
-            bumpMap={bump}
-            bumpScale={0.03}
-            color='#ccc'
-          />
-        </mesh>
-        <mesh
-          ref={inputRef}
-          geometry={nodes.M740158_mesh_out.geometry}
-          material={materials['Material.015']}
-          scale={100}
-        >
-          <meshStandardMaterial
-            attach='material'
-            bumpMap={bump}
-            bumpScale={0.03}
-            roughness={0.7}
-            emissive={1}
-            map={textureRef.current}
-            aoMap={aoMapout}
-            aoMapIntensity={0.5}
+          <mesh
+            geometry={nodes.M740158_mesh_in.geometry}
+            material={materials['Material.016']}
+            scale={100}
           >
-            <texture attach='map' image={canvasRef.current.getElement()} />
-          </meshStandardMaterial>
-        </mesh>
-        <mesh
-          geometry={nodes.M740158_mesh_zipp.geometry}
-          material={materials['Material.013']}
-          scale={100}
-        >
-          <meshStandardMaterial
-            attach='material'
-            normalMap={normalMap}
-            normalMap-flipY={false}
-            map={textureRef.current}
-            aoMap={aoMapzipp}
-            aoMapIntensity={0.7}
+            <meshStandardMaterial
+              attach='material'
+              roughness={1}
+              emissive={1}
+              bumpMap={bump}
+              bumpScale={0.03}
+              color='#ccc'
+            />
+          </mesh>
+          <mesh
+            ref={inputRef}
+            geometry={nodes.M740158_mesh_out.geometry}
+            material={materials['Material.015']}
+            scale={100}
           >
-            <texture attach='map' image={canvasRef.current.getElement()} />
-          </meshStandardMaterial>
-        </mesh>
-        <mesh
-          geometry={nodes.M740158_mesh_zipper.geometry}
-          material={materials['Material.014']}
-          scale={100}
-        >
-          <meshStandardMaterial
-            attach='material'
-            normalMap={normalMap}
-            normalMap-flipY={false}
-            map={textureRef.current}
-            aoMap={aoMapzipp}
-            aoMapIntensity={0.7}
+            <meshStandardMaterial
+              attach='material'
+              bumpMap={bump}
+              bumpScale={0.03}
+              roughness={0.7}
+              emissive={1}
+              map={textureRef.current}
+              aoMap={aoMapout}
+              aoMapIntensity={0.5}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+          <mesh
+            geometry={nodes.M740158_mesh_zipp.geometry}
+            material={materials['Material.013']}
+            scale={100}
           >
-            <texture attach='map' image={canvasRef.current.getElement()} />
-          </meshStandardMaterial>
-        </mesh>
-      </animated.group>
+            <meshStandardMaterial
+              attach='material'
+              normalMap={normalMap}
+              normalMap-flipY={false}
+              map={textureRef.current}
+              aoMap={aoMapzipp}
+              aoMapIntensity={0.7}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+          <mesh
+            geometry={nodes.M740158_mesh_zipper.geometry}
+            material={materials['Material.014']}
+            scale={100}
+          >
+            <meshStandardMaterial
+              attach='material'
+              normalMap={normalMap}
+              normalMap-flipY={false}
+              map={textureRef.current}
+              aoMap={aoMapzipp}
+              aoMapIntensity={0.7}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+        </animated.group>
+      ) : (
+        <group
+          ref={groupRef}
+          dispose={null}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            ray.current = e.intersections[0].uv
+            if (isAddText) {
+              addText({ canvasRef, textureRef, ray: e.intersections[0].uv })
+            }
+          }}
+          {...props}
+        >
+          <mesh
+            geometry={nodes.M740158_mesh_in.geometry}
+            material={materials['Material.016']}
+            scale={100}
+          >
+            <meshStandardMaterial
+              attach='material'
+              roughness={1}
+              emissive={1}
+              bumpMap={bump}
+              bumpScale={0.03}
+              color='#ccc'
+            />
+          </mesh>
+          <mesh
+            ref={inputRef}
+            geometry={nodes.M740158_mesh_out.geometry}
+            material={materials['Material.015']}
+            scale={100}
+          >
+            <meshStandardMaterial
+              attach='material'
+              bumpMap={bump}
+              bumpScale={0.03}
+              roughness={0.7}
+              emissive={1}
+              map={textureRef.current}
+              aoMap={aoMapout}
+              aoMapIntensity={0.5}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+          <mesh
+            geometry={nodes.M740158_mesh_zipp.geometry}
+            material={materials['Material.013']}
+            scale={100}
+          >
+            <meshStandardMaterial
+              attach='material'
+              normalMap={normalMap}
+              normalMap-flipY={false}
+              map={textureRef.current}
+              aoMap={aoMapzipp}
+              aoMapIntensity={0.7}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+          <mesh
+            geometry={nodes.M740158_mesh_zipper.geometry}
+            material={materials['Material.014']}
+            scale={100}
+          >
+            <meshStandardMaterial
+              attach='material'
+              normalMap={normalMap}
+              normalMap-flipY={false}
+              map={textureRef.current}
+              aoMap={aoMapzipp}
+              aoMapIntensity={0.7}
+            >
+              <texture attach='map' image={canvasRef.current.getElement()} />
+            </meshStandardMaterial>
+          </mesh>
+        </group>
+      )}
+
       <OrbitControls
         ref={controlsRef}
         autoRotate={isAutoRotate}

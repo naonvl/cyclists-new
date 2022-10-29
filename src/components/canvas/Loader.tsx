@@ -12,7 +12,7 @@ function Loader() {
           width={600}
           height={599}
           objectFit='cover'
-          rootClass='z-30 top-[22rem] -right-[56.5rem] md:-right-[66.5rem] lg:-right-[64rem]'
+          rootClass='z-30 top-[15rem] -right-[56.5rem] md:-right-[66.5rem] lg:-right-[64rem]'
           style={{
             position: 'absolute',
           }}
