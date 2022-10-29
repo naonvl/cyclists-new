@@ -442,7 +442,7 @@ const ShirtComponent = ({
       <BakeShadows />
       <AdaptiveDpr pixelated />
       <AdaptiveEvents />
-      <Stats showPanel={0} />
+      {/* <Stats showPanel={0} /> */}
     </>
   )
 }
