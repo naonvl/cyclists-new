@@ -1,8 +1,8 @@
 import { GetStaticPaths, GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
 import { useState, useRef, useEffect } from 'react'
-import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon'
-import useStore, { getState, setState } from '@/helpers/store'
+import ClockIcon from '@heroicons/react/24/outline/ClockIcon'
+import useStore from '@/helpers/store'
 
 import Image from '@/components/dom/Image'
 import type { Canvas } from 'fabric/fabric-impl'
@@ -24,6 +24,7 @@ import FormOrder from '@/components/dom/FormOrder'
 import Overlay from '@/components/dom/Overlay'
 import FlipControls from '@/components/dom/FlipControls'
 import PriceTag from '@/components/dom/PriceTag'
+import ModalSizeChart from '@/components/dom/ModalSizeChart'
 import Features from '@/components/dom/Features'
 
 import Link from 'next/link'
@@ -63,7 +64,9 @@ const CustomerPage = (props) => {
       state.isSpringActive,
     ])
   const cancelModalTextRef = useRef(null)
+  const cancelModalSizeChartRef = useRef(null)
   const [openTextModal, setOpenTextModal] = useState(false)
+  const [openSizeChartModal, setOpenSizeChartModal] = useState(false)
 
   useFirstRender({ canvasRef, textureRef })
 
@@ -146,15 +149,44 @@ const CustomerPage = (props) => {
             <StepNavigation />
           </div>
 
-          <FormOrder
-            canvasRef={canvasRef}
-            cid={props.cid}
-            componentLoading={isLoading}
-          />
+          {!isLoading ? (
+            <div className='hidden my-11 lg:flex'>
+              {/* <div className='flex my-3 gap-1'>
+              <ClockIcon className='w-5 h-5 color-gray-400' />
+              <Text>
+                Estimated delivery between <b>Friday 04 November</b> and{' '}
+                <b>Tuesday 15 November.</b>
+              </Text>
+            </div> */}
+              <Image
+                alt='Cyclists'
+                src='/img/features-icons.png'
+                objectFit='contain'
+                layout='fill'
+                width='100%'
+                height={90}
+                quality={80}
+                style={{
+                  maxWidth: '580px',
+                }}
+              />
+            </div>
+          ) : null}
+
+          <div className='block lg:hidden'>
+            <FormOrder
+              canvasRef={canvasRef}
+              cid={props.cid}
+              componentLoading={isLoading}
+            />
+          </div>
         </div>
 
         <div className='block my-2 lg:hidden'>
-          <PriceTag componentLoading={isLoading} />
+          <PriceTag
+            componentLoading={isLoading}
+            isMobileVersion={isMobileVersion}
+          />
         </div>
 
         <div className='hidden mx-5 lg:w-1/2 lg:block'>
@@ -192,10 +224,40 @@ const CustomerPage = (props) => {
               })}
             </LCanvas>
           ) : null}
-          <Helpers componentLoading={isLoading} isMobileVersion={false} />
-          <div className='hidden my-2 lg:block'>
-            <PriceTag componentLoading={isLoading} />
-          </div>
+
+          {!isLoading ? (
+            <div className='ml-8'>
+              <Helpers componentLoading={isLoading} isMobileVersion={false} />
+              <div className='hidden my-2 lg:block'>
+                <PriceTag
+                  componentLoading={isLoading}
+                  isMobileVersion={isMobileVersion}
+                />
+                <div className='flex mt-4 gap-1 hover:cursor-pointer'>
+                  <Image
+                    alt='Cyclists'
+                    src='/icons/rules.svg'
+                    objectFit='contain'
+                    layout='fill'
+                    width='100%'
+                    height={25}
+                    quality={80}
+                    style={{
+                      maxWidth: '25px',
+                    }}
+                  />
+                  <Text className='text-[#4a90e2] hover:text-[#56a2fa]'>
+                    Size Chart
+                  </Text>
+                </div>
+                <FormOrder
+                  canvasRef={canvasRef}
+                  cid={props.cid}
+                  componentLoading={isLoading}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -203,6 +265,11 @@ const CustomerPage = (props) => {
       <ModalText
         open={openTextModal}
         setOpen={setOpenTextModal}
+        cancelButtonRef={cancelModalTextRef}
+      />
+      <ModalSizeChart
+        open={openSizeChartModal}
+        setOpen={setOpenSizeChartModal}
         cancelButtonRef={cancelModalTextRef}
       />
     </>

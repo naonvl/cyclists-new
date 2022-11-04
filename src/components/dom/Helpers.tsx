@@ -34,12 +34,12 @@ const Helpers: React.FC<Props> = ({ componentLoading, isMobileVersion }) => {
   ) : (
     <div
       className={cn(
-        'items-center justify-center w-full my-2 ml-auto gap-3',
+        'items-center  w-full my-2 ml-auto gap-3',
         {
-          ['hidden lg:flex']: !isMobileVersion,
+          ['hidden justify-start lg:flex']: !isMobileVersion,
         },
         {
-          ['flex lg:hidden']: isMobileVersion,
+          ['flex justify-center lg:hidden']: isMobileVersion,
         }
       )}
     >

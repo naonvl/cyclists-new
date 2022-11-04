@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-inject-url="https://cdn.kiwisizing.com/icons/ruler4.min.svg?v=5-inject2" class="kiwi-svg kiwi-injectable" crossorigin="Anonymous">
+  <style type="text/css">
+    .rules-svg{fill:#4a90e2;}
+    .rules-svg:hover{fill:#56a2fa;}
+  </style>
+  <path class="rules-svg" d="M0 136v240h512V136H0zm472 200H40V176h38v48h40v-48h40v88h40v-88h38v48h40v-48h38v88h40v-88h40v48h40v-48h38v160z">
+  </path>
+</svg>

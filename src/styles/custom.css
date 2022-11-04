@@ -8,3 +8,11 @@
   left: -27rem !important;
   position: relative !important;
 }
+
+.rules-svg {
+  fill: #4a90e2;
+}
+
+.rules-svg:hover {
+  fill: #56a2fa;
+}

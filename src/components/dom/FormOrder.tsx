@@ -1,6 +1,7 @@
 import cn from 'clsx'
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import InputNumber from '@/components/dom/InputNumber'
+import Text from '@/components/dom/Text'
 import canvasToSVG from '@/helpers/canvasToSVG'
 import generateTag from '@/helpers/generateTag'
 import useStore, { setState } from '@/helpers/store'
@@ -95,6 +96,10 @@ const FormOrder: React.FC<FormOrderProps> = ({
     return setFormData({ ...formData, quantity: formData.quantity + 1 })
   }
 
+  const handleClickSize = (id: number, size: string) => {
+    setFormData({ ...formData, size: size, variantID: id })
+  }
+
   return componentLoading ? (
     <div>
       <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
@@ -110,10 +115,34 @@ const FormOrder: React.FC<FormOrderProps> = ({
       target='_blank'
       onSubmit={handleSubmit}
     >
-      <div className='flex flex-col w-full mb-2 mt-7 md:flex-row md:gap-4'>
+      <div className='block my-1'>
+        <input hidden readOnly name='id' value={formData.variantID} />
+        <Text className='uppercase'>Size: {formData.size}</Text>
+        <div className='flex w-full gap-2'>
+          {variants.map((variant, index) => (
+            <button
+              type='button'
+              onClick={() => handleClickSize(variant.id, variant.option2)}
+              className={cn(
+                `rounded-sm flex items-center justify-center w-8 h-8 text-xs text-center bg-gray-200`,
+                {
+                  ['border border-pink-500']: variant.id === formData.variantID,
+                }
+              )}
+              key={index}
+            >
+              <Text>{variant.option2}</Text>
+            </button>
+            // <option value={variant.id} key={index}>
+            //   {variant.option2}
+            // </option>
+          ))}
+        </div>
+      </div>
+      <div className='flex flex-col w-full my-2 md:flex-row md:gap-4'>
         <div className='flex w-full gap-2'>
           <InputNumber
-            rootClass='w-full lg:w-auto'
+            rootClass='w-full lg:w-auto max-h-[48px] my-2'
             id='totalOrder'
             name='quantity'
             type='number'
@@ -124,36 +153,43 @@ const FormOrder: React.FC<FormOrderProps> = ({
             incrementAction={incrementAction}
             count={formData.quantity}
           />
-          <select
-            defaultValue={42808925978823}
-            onChange={handleChangeForm}
-            name='id'
-            className='relative flex items-stretch w-full h-auto text-black bg-white border lg:w-auto py-[0.65rem] border-1 rounded-[0.10rem] md:items-center md:my-auto border-[#666]'
+          <button
+            type='submit'
+            className={cn(
+              'w-full lg:w-2/4 px-4 text-center py-3 text-sm uppercase',
+              {
+                ['cursor-not-allowed bg-white text-black border border-black h-full max-h-[48px] my-2']:
+                  isLoading,
+              },
+              {
+                ['bg-pink-600 border border-pink-600 text-white my-2 hover:border hover:border-black hover:bg-white hover:text-black']:
+                  !isLoading,
+              }
+            )}
+            disabled={isLoading}
           >
-            {variants.map((variant, index) => (
-              <option value={variant.id} key={index}>
-                {variant.option2}
-              </option>
-            ))}
-          </select>
+            {isLoading ? 'Loading...' : 'add to cart'}
+          </button>
         </div>
-        <button
-          type='submit'
-          className={cn(
-            'w-full px-4 text-center py-3 text-sm uppercase',
-            {
-              ['cursor-not-allowed bg-white text-black border border-black']:
-                isLoading,
-            },
-            {
-              ['bg-pink-600 border border-pink-600 text-white my-2 hover:border hover:border-black hover:bg-white hover:text-black']:
-                !isLoading,
-            }
-          )}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Loading...' : 'add to cart'}
-        </button>
+        {/* <div className='flex w-full'>
+          <button
+            type='submit'
+            className={cn(
+              'w-full px-4 text-center py-3 text-sm uppercase',
+              {
+                ['cursor-not-allowed bg-white text-black border border-black']:
+                  isLoading,
+              },
+              {
+                ['bg-pink-600 border border-pink-600 text-white my-2 hover:border hover:border-black hover:bg-white hover:text-black']:
+                  !isLoading,
+              }
+            )}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'add to cart'}
+          </button>
+        </div> */}
       </div>
     </form>
   )
