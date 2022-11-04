@@ -233,7 +233,10 @@ const CustomerPage = (props) => {
                   componentLoading={isLoading}
                   isMobileVersion={isMobileVersion}
                 />
-                <div className='flex mt-4 gap-1 hover:cursor-pointer'>
+                <div
+                  className='flex mt-4 gap-1 hover:cursor-pointer'
+                  onClick={() => setOpenSizeChartModal(true)}
+                >
                   <Image
                     alt='Cyclists'
                     src='/icons/rules.svg'
@@ -270,7 +273,7 @@ const CustomerPage = (props) => {
       <ModalSizeChart
         open={openSizeChartModal}
         setOpen={setOpenSizeChartModal}
-        cancelButtonRef={cancelModalTextRef}
+        cancelButtonRef={cancelModalSizeChartRef}
       />
     </>
   )

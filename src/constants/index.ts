@@ -313,3 +313,25 @@ export const SHOPIFY_ACCESS_TOKEN = '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'
 export const PRODUCT_ID = 7510567682247
 export const API_URL_DEVELOPMENT = 'http://localhost:3000'
 export const API_URL_PRODUCTION = 'https://cyclists-demo-seven.vercel.app'
+
+export const METRIC_TABLE = [
+  ['UK/EU', 'Chest', 'Length Front', 'Length Back', 'Sleeve', ' Weight'],
+  ['S', '94cm', '55cm', '65cm', '36cm', '56kg - 68kg'],
+  ['M', '100cm', '57cm', '67cm', '38cm', '68kg - 72kg'],
+  ['L', '106cm', '59cm', '70cm', '40cm', '73kg - 77kg'],
+  ['XL', '112cm', '61cm', '73cm', '42cm', '78kg - 85kg'],
+  ['XXL', '118cm', '61cm', '75cm', '44cm', '85kg - 92kg'],
+  ['3XL', '124cm', '62cm', '77cm', '46cm', '92kg - 99kg'],
+  ['4XL', '130cm', '64cm', '79cm', '48cm', '100kg - 107kg'],
+]
+
+export const IMPERIAL_TABLE = [
+  ['UK/EU', 'Chest', 'Length Front', 'Length Back', 'Sleeve', ' Weight'],
+  ['S', '37"', '21.7"', '25.6"', '14.2"', '123lb - 150lb'],
+  ['M', '39.4"', '22.4"', '26.4"', '15"', '150lb - 159lb'],
+  ['L', '41.7"', '23.2"', '27.6"', '15.7"', '161lb - 170lb'],
+  ['XL', '44.1"', '24"', '28.7"', '16.5"', '172lb - 187lb'],
+  ['XXL', '46.5"', '24"', '29.5"', '17.3"', '187lb - 203lb'],
+  ['3XL', '48.8"', '24.4"', '30.3"', '18.1"', '203lb - 218lb'],
+  ['4XL', '51.2"', '25.2"', '31.1"', '18.9"', '220lb - 236lb'],
+]
