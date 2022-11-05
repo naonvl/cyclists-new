@@ -17,7 +17,7 @@ const Features: React.FC<FeaturesProps> = ({ componentLoading }) => {
 
       <button
         type='button'
-        className='absolute z-30 inline-flex px-2 text-sm font-bold text-gray-800 uppercase bg-white cursor-pointer gap-1 top-[1rem] right-[4rem]'
+        className='absolute z-30 inline-flex px-2 text-sm font-bold text-gray-800 uppercase bg-white cursor-pointer gap-1 top-[1rem] right-[2rem]'
       >
         <ArrowDownTrayIcon className='w-5 h-5 text-gray-800' />
         <span>save</span>

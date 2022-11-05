@@ -106,7 +106,7 @@ const CustomerPage = (props) => {
             {CustomerPage?.r3f && isMobileVersion ? (
               <LCanvas
                 style={{
-                  height: '303px',
+                  height: '420px',
                   zIndex: isAddText ? '99' : '20',
                 }}
                 canvasRef={canvasRef}
