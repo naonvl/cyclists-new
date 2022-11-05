@@ -78,7 +78,7 @@ const ShirtComponent = ({
   const dimensions = useStore((state) => state.dimensions)
   const flipChanged = useStore((state) => state.flipChanged)
   const isAutoRotate = useStore((state) => state.isAutoRotate)
-  const isSpringActive = useStore((state) => state.isSpringActive)
+  const setAutoRotate = useStore((state) => state.setAutoRotate)
   const cameraControls = useStore((state) => state.cameraControls)
   const isMobileVersion = useStore((state) => state.isMobileVersion)
 
@@ -135,6 +135,7 @@ const ShirtComponent = ({
 
   const handleClick = useCallback(
     (e) => {
+      setAutoRotate(false)
       const positionOnScene = getPosition(e)
       if (positionOnScene) {
         const canvasRect = canvasRef.current.getCenter()

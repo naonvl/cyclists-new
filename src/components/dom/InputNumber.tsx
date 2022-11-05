@@ -70,11 +70,11 @@ const InputNumber = forwardRef<HTMLInputElement, InputNumberProps>(
     )
 
     const minusClasses = cn(
-      'w-11 h-11 p-3 flex absolute leading-[1] text-center top-[0.25rem] left-0 cursor-pointer items-center'
+      'w-11 h-11 p-3 flex absolute leading-[1] text-center  left-0 cursor-pointer items-center'
     )
 
     const plusClasses = cn(
-      'w-11 h-11 p-3 flex absolute leading-[1] text-center top-[0.25rem] right-0 cursor-pointer items-center '
+      'w-11 h-11 p-3 flex absolute leading-[1] text-center  right-0 cursor-pointer items-center '
     )
 
     return (

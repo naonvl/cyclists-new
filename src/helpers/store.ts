@@ -40,6 +40,7 @@ interface State {
     z: number
   }
   setTextActive: (param: boolean) => void
+  setAutoRotate: (param: boolean) => void
   router: NextRouter
   dom: MutableRefObject<any>
   insertText: string
@@ -185,6 +186,7 @@ const useStoreImpl = create<State>()((set, get) => ({
   setWidth: (param) => set(() => ({ width: param })),
   textActive: false,
   setTextActive: (param) => set(() => ({ textActive: param })),
+  setAutoRotate: (param) => set(() => ({ isAutoRotate: param })),
   texturePath: 1,
   colors: [],
   changeColor: (index, newColor) =>

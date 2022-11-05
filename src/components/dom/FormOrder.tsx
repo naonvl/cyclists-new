@@ -124,7 +124,7 @@ const FormOrder: React.FC<FormOrderProps> = ({
               type='button'
               onClick={() => handleClickSize(variant.id, variant.option2)}
               className={cn(
-                `rounded-sm flex items-center justify-center w-8 h-8 text-xs text-center bg-gray-200`,
+                `rounded-sm flex items-center justify-center w-9 h-9 text-xs text-center bg-gray-100`,
                 {
                   ['border border-pink-500']: variant.id === formData.variantID,
                 }

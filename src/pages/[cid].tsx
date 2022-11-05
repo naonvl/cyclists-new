@@ -148,9 +148,14 @@ const CustomerPage = (props) => {
           <div className='my-2'>
             <StepNavigation />
           </div>
+          <div className='py-3 my-2'>
+            <p className='font-light text-sm'>
+              Estimated delivery between <b>Monday 07 November</b> and <b>Friday 18 November</b>.
+            </p>
+          </div>
 
           {!isLoading ? (
-            <div className='hidden my-11 lg:flex'>
+            <div className='hidden my-5 lg:flex'>
               {/* <div className='flex my-3 gap-1'>
               <ClockIcon className='w-5 h-5 color-gray-400' />
               <Text>

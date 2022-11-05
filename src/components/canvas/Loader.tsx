@@ -9,14 +9,15 @@ function Loader() {
           alt='Cyclists Logo'
           src='/img/loader.gif'
           layout='fill'
-          width={600}
-          height={599}
+          width={100}
+          height={100}
           objectFit='cover'
           rootClass='z-30 top-[15rem] -right-[56.5rem] md:-right-[66.5rem] lg:top-[22rem] lg:-right-[64rem]'
           style={{
             position: 'absolute',
+            transform: 'translate(-250px, 250px)'
           }}
-          quality={60}
+          quality={100}
           priority={true}
         />
       </div>
