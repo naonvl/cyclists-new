@@ -58,7 +58,8 @@ const LCanvas: FC<CanvasProps> = ({
       style={style}
       gl={{
         antialias: true,
-        toneMapping: NoToneMapping
+        toneMapping: NoToneMapping,
+        physicallyCorrectLights: true
       }}
       onPointerDown={(e) => {
         e.stopPropagation()
@@ -74,29 +75,14 @@ const LCanvas: FC<CanvasProps> = ({
     >
       <Suspense fallback={<Loader />}>
         <directionalLight
-          intensity={0.5}
+          intensity={1}
           position={[50, 50, 50]}
         />
         <directionalLight
-          intensity={0.4}
+          intensity={1}
           position={[-50, 50, -50]}
         />
-        {/* <spotLight
-          intensity={0.2}
-          angle={0.5}
-          penumbra={1}
-          position={[50, 60, 50]}
-          castShadow
-        />
-        <spotLight
-          intensity={0.2}
-          angle={0.5}
-          penumbra={1}
-          position={[50, 50, -50]}
-          castShadow
-        /> */}
-        <ambientLight intensity={0.3} />
-        {/* <Environment preset='city' /> */}
+        <ambientLight intensity={0.7} />
         {children}
         <Preload all />
       </Suspense>
