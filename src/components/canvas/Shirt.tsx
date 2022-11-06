@@ -84,8 +84,6 @@ const ShirtComponent = ({
 
   // Textures
   const [normalMap] = useLoader(TextureLoader, ['/textures/Jersey_NORMAL.png'])
-  const [aoMapout] = useLoader(TextureLoader, ['/textures/ao_out.png'])
-  const [aoMapzipp] = useLoader(TextureLoader, ['/textures/ao_zip.png'])
   const [bump] = useLoader(TextureLoader, ['/textures/DisplacementMap.jpg'])
 
   const getPosition = useCallback(
@@ -305,8 +303,6 @@ const ShirtComponent = ({
               roughness={0.7}
               emissive={1}
               map={textureRef.current}
-              aoMap={aoMapout}
-              aoMapIntensity={0.5}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
@@ -321,8 +317,6 @@ const ShirtComponent = ({
               normalMap={normalMap}
               normalMap-flipY={false}
               map={textureRef.current}
-              aoMap={aoMapzipp}
-              aoMapIntensity={0.7}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
@@ -337,8 +331,6 @@ const ShirtComponent = ({
               normalMap={normalMap}
               normalMap-flipY={false}
               map={textureRef.current}
-              aoMap={aoMapzipp}
-              aoMapIntensity={0.7}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
@@ -384,8 +376,6 @@ const ShirtComponent = ({
               roughness={0.7}
               emissive={1}
               map={textureRef.current}
-              aoMap={aoMapout}
-              aoMapIntensity={0.5}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
@@ -400,8 +390,6 @@ const ShirtComponent = ({
               normalMap={normalMap}
               normalMap-flipY={false}
               map={textureRef.current}
-              aoMap={aoMapzipp}
-              aoMapIntensity={0.7}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
@@ -416,8 +404,6 @@ const ShirtComponent = ({
               normalMap={normalMap}
               normalMap-flipY={false}
               map={textureRef.current}
-              aoMap={aoMapzipp}
-              aoMapIntensity={0.7}
             >
               <texture attach='map' image={canvasRef.current.getElement()} />
             </meshStandardMaterial>
