@@ -58,7 +58,7 @@ const LCanvas: FC<CanvasProps> = ({
       style={style}
       gl={{
         antialias: true,
-        toneMapping: ACESFilmicToneMapping
+        toneMapping: NoToneMapping
       }}
       onPointerDown={(e) => {
         e.stopPropagation()
