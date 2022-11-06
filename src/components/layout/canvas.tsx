@@ -17,6 +17,7 @@ import { Canvas } from '@react-three/fiber'
 import useStore, { setState } from '@/helpers/store'
 import type { Canvas as FabriCanvas } from 'fabric/fabric-impl'
 import { Texture } from 'three/src/textures/Texture'
+import THREE, { ACESFilmicToneMapping, NoToneMapping } from 'three'
 
 interface CanvasProps {
   children?: React.ReactNode
@@ -57,6 +58,7 @@ const LCanvas: FC<CanvasProps> = ({
       style={style}
       gl={{
         antialias: true,
+        toneMapping: ACESFilmicToneMapping
       }}
       onPointerDown={(e) => {
         e.stopPropagation()
@@ -71,15 +73,30 @@ const LCanvas: FC<CanvasProps> = ({
       {...props}
     >
       <Suspense fallback={<Loader />}>
-        <spotLight
+        <directionalLight
           intensity={0.5}
-          angle={0.3}
+          position={[50, 50, 50]}
+        />
+        <directionalLight
+          intensity={0.4}
+          position={[-50, 50, -50]}
+        />
+        {/* <spotLight
+          intensity={0.2}
+          angle={0.5}
           penumbra={1}
-          position={[10, 50, 50]}
+          position={[50, 60, 50]}
           castShadow
         />
-        <ambientLight intensity={0.4} />
-        <Environment preset='city' />
+        <spotLight
+          intensity={0.2}
+          angle={0.5}
+          penumbra={1}
+          position={[50, 50, -50]}
+          castShadow
+        /> */}
+        <ambientLight intensity={0.3} />
+        {/* <Environment preset='city' /> */}
         {children}
         <Preload all />
       </Suspense>
